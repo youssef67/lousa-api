@@ -1,0 +1,15 @@
+version: '3.8'
+services:
+  db:
+    image: kartoza/postgis:12.0
+    restart: always
+    environment:
+      - POSTGRES_USER=lousa1
+      - POSTGRES_PASSWORD=!!Lousa1
+      - POSTGRES_DB=lousa_dev
+    volumes:
+      - postgres_lousa:/var/lib/postgresql/data
+    ports:
+      - '4434:5432'
+volumes:
+  postgres_lousa:

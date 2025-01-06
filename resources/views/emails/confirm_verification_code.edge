@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>verification code</title>
+    <style>
+      body {
+        font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;
+        background-color: #f4f4f7;
+        margin: 0;
+        padding: 0;
+        color: #51545e;
+        width: 100%;
+      }
+      table {
+        border-spacing: 0;
+        border-collapse: collapse;
+        width: 100%;
+      }
+      .email-container {
+        width: 100%;
+        max-width: 600px;
+        margin: 0 auto;
+        background-color: #ffffff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        text-align: center; /* Ensures content is centered */
+      }
+      .email-header {
+        background-color: #007bff;
+        color: white;
+        padding: 20px;
+        text-align: center;
+      }
+      .email-header img {
+        max-width: 100px;
+      }
+      .email-body {
+        padding: 20px;
+        text-align: center; /* Ensures body text is centered */
+      }
+      .email-footer {
+        padding: 20px;
+        background-color: #f4f4f7;
+        text-align: center;
+        font-size: 12px;
+        color: #a8aaaf;
+      }
+      .verification-code {
+        display: inline-block;
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        font-size: 20px;
+        font-weight: bold;
+        border-radius: 5px;
+        margin: 20px 0;
+        text-decoration: none;
+      }
+      @media (max-width: 600px) {
+        .email-body {
+          padding: 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <center>
+      <table class="email-container" align="center">
+        <!-- Header -->
+        <tr>
+          <td class="email-header">
+            <img src="https://via.placeholder.com/100x50?text=Company+Logo" alt="Company Logo" />
+            <h1>code de vérification</h1>
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td class="email-body">
+            <p>bonjour,</p>
+            <p>Nous avons reçu une demande pour vérifier votre adresse e-mail.</p>
+            <p>Votre code de vérification est</p>
+
+            <!-- Verification Code -->
+            <p class="verification-code">{{ verificationCode }}</p>
+
+            <p>Si vous n'avez pas demandé ce code, vous pouvez ignorer cet email.</p>
+            <p>Merci<br />LOUSA</p>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td class="email-footer">
+            <p>Vous recevez cet e-mail car vous avez demandé un code de vérification sur notre site.</p>
+          </td>
+        </tr>
+      </table>
+    </center>
+  </body>
+</html>

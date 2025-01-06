@@ -1,0 +1,346 @@
+2024-11-18 14:22:58 DEBUG: => SEND EMAIL
+{
+  "pathEmailTemplate": "emails/confirm_verification_code",
+  "toEmail": "you.moudni@gmail.com",
+  "fromEmail": "verification@lousa.one",
+  "subject": "Verification code",
+  "values": "71170"
+}
+2024-11-18 14:25:22 DEBUG: => SEND EMAIL
+{
+  "pathEmailTemplate": "emails/confirm_verification_code",
+  "toEmail": "you.moudni@gmail.com",
+  "fromEmail": "verification@lousa.one",
+  "subject": "Verification code",
+  "values": "75110"
+}
+2024-11-18 14:27:24 DEBUG: => SEND EMAIL
+{
+  "pathEmailTemplate": "emails/confirm_verification_code",
+  "toEmail": "you.moudni@gmail.com",
+  "fromEmail": "verification@lousa.one",
+  "subject": "Verification code",
+  "values": "67975"
+}
+2024-11-18 14:28:11 DEBUG: => SEND EMAIL
+{
+  "pathEmailTemplate": "emails/confirm_verification_code",
+  "toEmail": "you.moudni@gmail.com",
+  "fromEmail": "verification@lousa.one",
+  "subject": "Verification code",
+  "values": "88724"
+}
+2024-11-18 14:32:45 DEBUG: => SEND EMAIL
+{
+  "pathEmailTemplate": "emails/confirm_verification_code",
+  "toEmail": "you.moudni@gmail.com",
+  "fromEmail": "verification@lousa.one",
+  "subject": "Verification code",
+  "values": "50622"
+}
+2024-11-18 14:33:13 DEBUG: => SEND EMAIL
+{
+  "pathEmailTemplate": "emails/confirm_verification_code",
+  "toEmail": "you.moudni@gmail.com",
+  "fromEmail": "verification@lousa.one",
+  "subject": "Verification code",
+  "values": "02011"
+}
+2024-11-18 14:38:33 DEBUG: => SEND EMAIL
+{
+  "pathEmailTemplate": "emails/confirm_verification_code",
+  "toEmail": "you.moudni@gmail.com",
+  "fromEmail": "verification@lousa.one",
+  "subject": "Verification code",
+  "values": "93170"
+}
+2024-11-18 14:45:07 DEBUG: => SEND EMAIL
+{
+  "pathEmailTemplate": "emails/confirm_verification_code",
+  "toEmail": "you.moudni@gmail.com",
+  "fromEmail": "verification@lousa.one",
+  "subject": "Verification code",
+  "values": "61576"
+}
+2024-11-18 14:50:06 DEBUG: => SEND EMAIL
+{
+  "pathEmailTemplate": "emails/confirm_verification_code",
+  "toEmail": "you.moudni@gmail.com",
+  "fromEmail": "verification@lousa.one",
+  "subject": "Verification code",
+  "values": "10276"
+}
+2024-11-18 14:54:19 DEBUG: => SEND EMAIL
+{
+  "pathEmailTemplate": "emails/confirm_verification_code",
+  "toEmail": "you.moudni@gmail.com",
+  "fromEmail": "verification@lousa.one",
+  "subject": "Verification code",
+  "values": "60220"
+}
+2024-11-18 14:59:43 DEBUG: => SEND EMAIL
+{
+  "pathEmailTemplate": "emails/confirm_verification_code",
+  "toEmail": "you.moudni@gmail.com",
+  "fromEmail": "verification@lousa.one",
+  "subject": "code de vérification",
+  "values": "37715"
+}
+2024-11-18 15:00:17 DEBUG: => SEND EMAIL
+{
+  "pathEmailTemplate": "emails/confirm_verification_code",
+  "toEmail": "you.moudni@gmail.com",
+  "fromEmail": "verification@lousa.one",
+  "subject": "code de vérification",
+  "values": "02175"
+}
+2024-11-18 15:01:32 DEBUG: => SEND EMAIL
+{
+  "pathEmailTemplate": "emails/confirm_verification_code",
+  "toEmail": "you.moudni@gmail.com",
+  "fromEmail": "verification@lousa.one",
+  "subject": "code de vérification",
+  "values": "58810"
+}
+2024-11-18 15:29:33 DEBUG: => SEND EMAIL
+{
+  "pathEmailTemplate": "emails/confirm_verification_code",
+  "toEmail": "you.moudni@gmail.com",
+  "fromEmail": "verification@lousa.one",
+  "subject": "code de vérification",
+  "values": "95407"
+}
+2024-11-18 15:32:28 DEBUG: => SEND EMAIL
+{
+  "pathEmailTemplate": "emails/confirm_verification_code",
+  "toEmail": "you.moudni@gmail.com",
+  "fromEmail": "verification@lousa.one",
+  "subject": "code de vérification",
+  "values": "32863"
+}
+2024-11-18 15:33:24 DEBUG: => SEND EMAIL
+{
+  "pathEmailTemplate": "emails/confirm_verification_code",
+  "toEmail": "you.moudni@gmail.com",
+  "fromEmail": "contact@youssefmoudni.fr",
+  "subject": "code de vérification",
+  "values": "54638"
+}
+2024-11-18 20:54:33 DEBUG: => SEND EMAIL
+{
+  "pathEmailTemplate": "emails/confirm_verification_code",
+  "toEmail": "you.moudni@gmail.com",
+  "fromEmail": "contact@youssefmoudni.fr",
+  "subject": "code de vérification",
+  "values": "63225"
+}
+2024-11-18 20:57:11 DEBUG: => SEND EMAIL
+{
+  "pathEmailTemplate": "emails/confirm_verification_code",
+  "toEmail": "you.moudni@gmail.com",
+  "fromEmail": "contact@youssefmoudni.fr",
+  "subject": "code de vérification",
+  "values": {
+    "verificationCode": "53965"
+  }
+}
+2024-11-18 22:00:01 DEBUG: => SEND EMAIL
+{
+  "pathEmailTemplate": "emails/confirm_verification_code",
+  "toEmail": "you.moudni@gmail.com",
+  "fromEmail": "contact@youssefmoudni.fr",
+  "subject": "code de vérification",
+  "values": {
+    "verificationCode": "08459"
+  }
+}
+2024-11-18 22:06:33 DEBUG: => SEND EMAIL
+{
+  "pathEmailTemplate": "emails/confirm_verification_code",
+  "toEmail": "you.moudni@gmail.com",
+  "fromEmail": "contact@youssefmoudni.fr",
+  "subject": "code de vérification",
+  "values": {
+    "verificationCode": "49731"
+  }
+}
+2024-11-19 10:12:54 DEBUG: => SEND EMAIL
+{
+  "pathEmailTemplate": "emails/confirm_verification_code",
+  "toEmail": "you.moudni@gmail.com",
+  "fromEmail": "contact@youssefmoudni.fr",
+  "subject": "code de vérification",
+  "values": {
+    "verificationCode": "87387"
+  }
+}
+2024-11-19 10:34:36 DEBUG: => SEND EMAIL
+{
+  "pathEmailTemplate": "emails/confirm_verification_code",
+  "toEmail": "you.moudni@gmail.com",
+  "fromEmail": "contact@youssefmoudni.fr",
+  "subject": "code de vérification",
+  "values": {
+    "verificationCode": "65369"
+  }
+}
+2024-11-19 10:45:55 DEBUG: => SEND EMAIL
+{
+  "pathEmailTemplate": "emails/confirm_verification_code",
+  "toEmail": "you.moudni@gmail.com",
+  "fromEmail": "contact@youssefmoudni.fr",
+  "subject": "code de vérification",
+  "values": {
+    "verificationCode": "89687"
+  }
+}
+2024-12-09 15:44:09 DEBUG: => SEND EMAIL
+{
+  "pathEmailTemplate": "emails/confirm_verification_code",
+  "toEmail": "you.moudni@gmail.com",
+  "fromEmail": "contact@youssefmoudni.fr",
+  "subject": "code de vérification",
+  "values": {
+    "verificationCode": "87322"
+  }
+}
+2024-12-10 13:17:57 DEBUG: => SEND EMAIL
+{
+  "pathEmailTemplate": "emails/confirm_verification_code",
+  "toEmail": "you.moudni@gmail.com",
+  "fromEmail": "contact@youssefmoudni.fr",
+  "subject": "code de vérification",
+  "values": {
+    "verificationCode": "96584"
+  }
+}
+2024-12-10 13:19:03 DEBUG: => SEND EMAIL
+{
+  "pathEmailTemplate": "emails/confirm_verification_code",
+  "toEmail": "you.moudni@gmail.com",
+  "fromEmail": "contact@youssefmoudni.fr",
+  "subject": "code de vérification",
+  "values": {
+    "verificationCode": "78036"
+  }
+}
+2024-12-10 13:31:04 DEBUG: => SEND EMAIL
+{
+  "pathEmailTemplate": "emails/confirm_verification_code",
+  "toEmail": "you.moudni@gmail.com",
+  "fromEmail": "contact@youssefmoudni.fr",
+  "subject": "code de vérification",
+  "values": {
+    "verificationCode": "67729"
+  }
+}
+2024-12-12 15:22:13 DEBUG: => SEND EMAIL
+{
+  "pathEmailTemplate": "emails/confirm_verification_code",
+  "toEmail": "you.moudni@gmail.com",
+  "fromEmail": "contact@youssefmoudni.fr",
+  "subject": "code de vérification",
+  "values": {
+    "verificationCode": "39352"
+  }
+}
+2024-12-12 19:49:43 DEBUG: => SEND EMAIL
+{
+  "pathEmailTemplate": "emails/confirm_verification_code",
+  "toEmail": "you.moudni@gmail.com",
+  "fromEmail": "contact@youssefmoudni.fr",
+  "subject": "code de vérification",
+  "values": {
+    "verificationCode": "71807"
+  }
+}
+2024-12-13 13:19:09 DEBUG: => SEND EMAIL
+{
+  "pathEmailTemplate": "emails/confirm_verification_code",
+  "toEmail": "you.moudni@gmail.com",
+  "fromEmail": "contact@youssefmoudni.fr",
+  "subject": "code de vérification",
+  "values": {
+    "verificationCode": "34312"
+  }
+}
+2024-12-16 14:26:59 DEBUG: => SEND EMAIL
+{
+  "pathEmailTemplate": "emails/confirm_verification_code",
+  "toEmail": "you.moudni@gmail.com",
+  "fromEmail": "contact@youssefmoudni.fr",
+  "subject": "code de vérification",
+  "values": {
+    "verificationCode": "92476"
+  }
+}
+2024-12-16 15:34:58 DEBUG: => SEND EMAIL
+{
+  "pathEmailTemplate": "emails/confirm_verification_code",
+  "toEmail": "you.moudni@gmail.com",
+  "fromEmail": "contact@youssefmoudni.fr",
+  "subject": "code de vérification",
+  "values": {
+    "verificationCode": "37291"
+  }
+}
+2024-12-18 13:22:04 DEBUG: => SEND EMAIL
+{
+  "pathEmailTemplate": "emails/confirm_verification_code",
+  "toEmail": "test@lousa.com",
+  "fromEmail": "contact@youssefmoudni.fr",
+  "subject": "code de vérification",
+  "values": {
+    "verificationCode": "98197"
+  }
+}
+2024-12-18 15:01:55 DEBUG: => SEND EMAIL
+{
+  "pathEmailTemplate": "emails/confirm_verification_code",
+  "toEmail": "test@lousa.com",
+  "fromEmail": "contact@youssefmoudni.fr",
+  "subject": "code de vérification",
+  "values": {
+    "verificationCode": "92581"
+  }
+}
+2024-12-18 15:07:26 DEBUG: => SEND EMAIL
+{
+  "pathEmailTemplate": "emails/confirm_verification_code",
+  "toEmail": "test@lousa.com",
+  "fromEmail": "contact@youssefmoudni.fr",
+  "subject": "code de vérification",
+  "values": {
+    "verificationCode": "24391"
+  }
+}
+2024-12-19 15:12:17 DEBUG: => SEND EMAIL
+{
+  "pathEmailTemplate": "emails/confirm_verification_code",
+  "toEmail": "test@lousa.com",
+  "fromEmail": "contact@youssefmoudni.fr",
+  "subject": "code de vérification",
+  "values": {
+    "verificationCode": "23258"
+  }
+}
+2024-12-19 15:24:45 DEBUG: => SEND EMAIL
+{
+  "pathEmailTemplate": "emails/confirm_verification_code",
+  "toEmail": "test@lousa.com",
+  "fromEmail": "contact@youssefmoudni.fr",
+  "subject": "code de vérification",
+  "values": {
+    "verificationCode": "59409"
+  }
+}
+2024-12-21 22:09:39 DEBUG: => SEND EMAIL
+{
+  "pathEmailTemplate": "emails/confirm_verification_code",
+  "toEmail": "test@lousa.com",
+  "fromEmail": "contact@youssefmoudni.fr",
+  "subject": "code de vérification",
+  "values": {
+    "verificationCode": "50671"
+  }
+}
