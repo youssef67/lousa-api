@@ -11,6 +11,7 @@ const getAllPlaylists = async ({ response, currentDevice }: HttpContext) => {
     status: ModelStatus.Enabled,
   })
 
+  console.log('playlistsArray')
   const serializedPlaylists = playlistsArray.map((playlist) => playlist.serializePlaylist())
 
   return response.ok({
