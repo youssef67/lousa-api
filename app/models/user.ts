@@ -40,7 +40,7 @@ export default class User extends BaseModel {
   declare twitchUserId?: string
 
   @column()
-  declare playlistSelected?: string
+  declare playlistSelected: string | null
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime

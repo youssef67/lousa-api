@@ -9,3 +9,9 @@ export const editUserValidator = vine.compile(
     }),
   })
 )
+
+export const setAndGetPlaylistSelectedValidator = vine.compile(
+  vine.object({
+    playlistId: vine.string().nullable(),
+  })
+)

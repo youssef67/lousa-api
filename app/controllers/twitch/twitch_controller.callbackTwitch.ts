@@ -53,7 +53,7 @@ const callbackTwitch = async ({ ally, response, request }: HttpContext) => {
       await existingTwitchUser.save()
 
       // Mise à jour de l'utilisateur avec l'id twitchUser
-      existingUser.TwitchUserId = existingTwitchUser.id
+      existingUser.twitchUserId = existingTwitchUser.id
       existingUser.useTransaction(trx)
       await existingUser.save()
     })
