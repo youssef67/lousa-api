@@ -1,0 +1,10 @@
+2025-02-06 22:17:48 DEBUG: => SEND EMAIL
+{
+  "pathEmailTemplate": "emails/confirm_verification_code",
+  "toEmail": "test@lousa.com",
+  "fromEmail": "contact@youssefmoudni.fr",
+  "subject": "code de vérification",
+  "values": {
+    "verificationCode": "07704"
+  }
+}

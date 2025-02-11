@@ -5,3 +5,9 @@ export const createPlaylistValidator = vine.compile(
     playlistName: vine.string(),
   })
 )
+
+export const deletePlaylistValidator = vine.compile(
+  vine.object({
+    id: vine.string(),
+  })
+)

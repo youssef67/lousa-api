@@ -4,11 +4,11 @@
 
 
 ## Bugs to correct
-- [] Define an email template for login
+- [] suppression du scope et du champs state et se poser la question de savoir si il faut enregistrer le state dans la table twitchUser
 
 
 ## Features to add
 
 
 ## Future improvements
-- rendre l'enregistrement en base de donnnées unique histoire de ne pas répéter ces lignes de code 
+- eviter la duplication des fonctions --refreshAccessToken-- et --isAccessTokenExpired-- presentent dans les models Spotify_user et TWitch_user

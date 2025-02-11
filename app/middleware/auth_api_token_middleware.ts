@@ -3,6 +3,8 @@ import type { NextFn } from '@adonisjs/core/types/http'
 import ApiError from '#types/api_error'
 import Device from '#models/device'
 import { validate as isUuid } from 'uuid'
+import { unsign } from 'cookie-signature'
+import env from '#start/env'
 
 declare module '@adonisjs/core/http' {
   export interface HttpContext {
@@ -12,14 +14,14 @@ declare module '@adonisjs/core/http' {
 
 export default class AuthApiTokenMiddleware {
   async handle({ request, response }: HttpContext, next: NextFn) {
-    const deviceId = request.header('x-d-i') // x-d-i stands for device id
-    const accessToken = request.header('x-d-a') // x-d-a stands for access token
+    const deviceId = unsign(request.header('x-d-i')?.slice(2) || '', env.get('COOKIE_SECRET')) // x-d-i stands for device id
+    const accessToken = unsign(request.header('x-d-a')?.slice(2) || '', env.get('COOKIE_SECRET')) // x-d-a stands for access token
 
+    console.log()
     if (!deviceId || !isUuid(deviceId)) {
       const apiError = new ApiError('Invalid data', 'ERROR_INVALID_DATA', 'ATHT-1')
       return response.unprocessableEntity(apiError.toJson())
     }
-
     if (!accessToken) {
       const apiError = new ApiError('Invalid data', 'ERROR_INVALID_DATA', 'ATHT-2')
       return response.unprocessableEntity(apiError.toJson())

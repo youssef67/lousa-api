@@ -1,29 +1,57 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import { ScopeSpotifyLogin } from '#types/spotify_scope'
-import env from '#start/env'
+// import transmit from '@adonisjs/transmit/services/main'
+import { TwitchDriver } from 'Twitch-driver'
+import ApiError from '#types/api_error'
+import db from '@adonisjs/lucid/services/db'
+import TwitchUser from '#models/twitch_user'
 
-const loginSpotifyStreamer = async ({ response, currentDevice }: HttpContext) => {
+const loginTwitch = async ({ ally, response, request, currentDevice }: HttpContext) => {
   await currentDevice.load('user')
+  const currentUser = currentDevice.user
 
-  const params = new URLSearchParams({
-    response_type: 'code',
-    client_id: env.get('TWITCH_CLIENT_ID'),
-    scope: [
-      ScopeSpotifyLogin.USER_READ_PRIVATE,
-      ScopeSpotifyLogin.USER_READ_EMAIL,
-      ScopeSpotifyLogin.PLAYLIST_MODIFY_PRIVATE,
-      ScopeSpotifyLogin.PLAYLIST_MODIFY_PUBLIC,
-    ].join(' '),
-    redirect_uri: env.get('TWITCH_REDIRECT_URI'),
+  // Utilisation de la librairie ally pour récupérer l'url de redirection
+  const twitch = ally.use('twitch') as TwitchDriver
+
+  const url = await twitch.redirectUrl((innerRequest) => {
+    innerRequest.scopes(['user:read:email'])
+    innerRequest.param('response_type', 'code')
+    innerRequest.param('force_verify', true)
   })
 
-  const spotifyAuthUrl = `https://accounts.spotify.com/authorize?${params.toString()}`
-
-  const responseJson = {
-    urlAuthorize: spotifyAuthUrl,
+  if (!url) {
+    throw ApiError.newError('ERROR_INVALID_DATA', 'ACLT-1')
   }
 
-  return response.ok(responseJson)
+  // Vérification de l'existence d'un utilisateur twitch déjà enregistré
+  const existingTwitchUser = await TwitchUser.query().where('userId', currentUser.id).first()
+  // if (existingTwitchUser) {
+  //   throw ApiError.newError('ERROR_INVALID_DATA', 'ACLT-2')
+  // }
+
+  const state = request.encryptedCookie('twitch_oauth_state')
+
+  if (!state) {
+    throw ApiError.newError('ERROR_INVALID_DATA', 'ACLT-3')
+  }
+
+  // Préparation de l'insertion finale en base de données avec un pré-enregistrement de l'utilisateur
+  await db.transaction(async (trx) => {
+    if (existingTwitchUser) {
+      existingTwitchUser.state = state
+      existingTwitchUser.useTransaction(trx)
+      await existingTwitchUser.save()
+    } else {
+      const twitchUser = new TwitchUser()
+      twitchUser.userId = currentUser.id
+      twitchUser.state = state
+      twitchUser.useTransaction(trx)
+      await twitchUser.save()
+    }
+  })
+
+  // await new Promise((resolve) => setTimeout(resolve, 500))
+
+  return response.ok({ url: url })
 }
 
-export default loginSpotifyStreamer
+export default loginTwitch

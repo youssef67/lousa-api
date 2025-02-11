@@ -1,5 +1,6 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import ApiError from '#types/api_error'
+import transmit from '@adonisjs/transmit/services/main'
 import db from '@adonisjs/lucid/services/db'
 import env from '#start/env'
 import axios from 'axios'
@@ -46,73 +47,31 @@ const handleSpotifyCallback = async ({ request, response, currentDevice }: HttpC
       },
     })
 
+    const newSpotifyUser = new SpotifyUser()
     await db.transaction(async (trx) => {
-      const spotifyUser = new SpotifyUser()
-      spotifyUser.userId = currentUser.id
-      spotifyUser.spotifyId = getProfile.data.id
-      spotifyUser.displayName = getProfile.data.display_name
-      spotifyUser.emailSpotify = getProfile.data.email
-      spotifyUser.externalUrl = getProfile.data.external_urls.spotify
-      spotifyUser.nbFollowers = getProfile.data.followers.total
-      spotifyUser.accessToken = tokenResponse.data.access_token
-      spotifyUser.refreshToken = tokenResponse.data.refresh_token
-      spotifyUser.tokenExpiresAt = DateTime.fromJSDate(new Date()).plus({ seconds: 3600 })
-      spotifyUser.scope = tokenResponse.data.scope
-      spotifyUser.useTransaction(trx)
-      await spotifyUser.save()
+      newSpotifyUser.userId = currentUser.id
+      newSpotifyUser.spotifyId = getProfile.data.id
+      newSpotifyUser.displayName = getProfile.data.display_name
+      newSpotifyUser.emailSpotify = getProfile.data.email
+      newSpotifyUser.externalUrl = getProfile.data.external_urls.spotify
+      newSpotifyUser.nbFollowers = getProfile.data.followers.total
+      newSpotifyUser.accessToken = tokenResponse.data.access_token
+      newSpotifyUser.refreshToken = tokenResponse.data.refresh_token
+      newSpotifyUser.tokenExpiresAt = DateTime.fromJSDate(new Date()).plus({ seconds: 3600 })
+      newSpotifyUser.scope = tokenResponse.data.scope
+      newSpotifyUser.useTransaction(trx)
+      await newSpotifyUser.save()
 
-      currentUser.spotifyUserId = spotifyUser.id
+      currentUser.spotifyUserId = newSpotifyUser.id
       currentUser.useTransaction(trx)
       await currentUser.save()
-      return spotifyUser
     })
 
-    return response.send(`
-      <html>
-        <body>
-          <p>Authentification réussie. Vous pouvez maintenant fermer cette fenêtre.</p>
-          <button onclick="closeWindow()">Fermer la fenêtre</button>
-
-          <script>
-            // Notifier la fenêtre parent de la réussite
-            if (window.opener) {
-              window.opener.postMessage({
-                type: 'SPOTIFY_AUTH_SUCCESS',
-                profile: ${JSON.stringify(getProfile.data).replace(/</g, '\\u003c')}
-              }, '*');
-            }
-
-            // Fonction pour fermer la fenêtre
-            function closeWindow() {
-              window.close();
-            }
-          </script>
-        </body>
-      </html>
-    `)
+    transmit.broadcast(`authentication/spotify/${newSpotifyUser.userId}`, {
+      spotifyUser: JSON.stringify(newSpotifyUser.serializeAsSession()),
+    })
   } catch (error) {
-    return response.send(`
-      <html>
-        <body>
-          <p>Erreur lors de l'authentification. Vous pouvez fermer cette fenêtre.</p>
-          <button onclick="closeWindow()">Fermer la fenêtre</button>
-
-          <script>
-            if (window.opener) {
-              window.opener.postMessage({
-                type: 'SPOTIFY_AUTH_ERROR',
-                error: '${error.message}'
-              }, '*');
-            }
-
-            // Fonction pour fermer la fenêtre
-            function closeWindow() {
-              window.close();
-            }
-          </script>
-        </body>
-      </html>
-    `)
+    return response.status(500).send(error)
   }
 }
 

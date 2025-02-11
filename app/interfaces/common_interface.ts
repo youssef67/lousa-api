@@ -5,6 +5,7 @@ export interface UserSession {
   email?: string
   dateOfBirth?: string
   role: string
+  twitchUser?: TwitchUserSession
 }
 
 export interface SpotifyUserSession {
@@ -14,4 +15,10 @@ export interface SpotifyUserSession {
   email?: string
   accessToken: string
   refreshToken: string
+}
+
+export interface TwitchUserSession {
+  id: string
+  displayName: string
+  email: string
 }

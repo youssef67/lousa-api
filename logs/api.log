@@ -344,3 +344,33 @@
     "verificationCode": "50671"
   }
 }
+2025-01-13 16:15:59 DEBUG: => SEND EMAIL
+{
+  "pathEmailTemplate": "emails/confirm_verification_code",
+  "toEmail": "test@lousa.com",
+  "fromEmail": "contact@youssefmoudni.fr",
+  "subject": "code de vérification",
+  "values": {
+    "verificationCode": "30104"
+  }
+}
+2025-01-13 16:20:19 DEBUG: => SEND EMAIL
+{
+  "pathEmailTemplate": "emails/confirm_verification_code",
+  "toEmail": "test@lousa.com",
+  "fromEmail": "contact@youssefmoudni.fr",
+  "subject": "code de vérification",
+  "values": {
+    "verificationCode": "32886"
+  }
+}
+2025-02-06 22:17:48 DEBUG: => SEND EMAIL
+{
+  "pathEmailTemplate": "emails/confirm_verification_code",
+  "toEmail": "test@lousa.com",
+  "fromEmail": "contact@youssefmoudni.fr",
+  "subject": "code de vérification",
+  "values": {
+    "verificationCode": "07704"
+  }
+}

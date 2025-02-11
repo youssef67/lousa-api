@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "workspaces": [
+    "../twitchDriver"
+  ],
   "license": "UNLICENSED",
   "scripts": {
     "start": "node bin/server.js",
@@ -47,6 +50,7 @@
     "@japa/plugin-adonisjs": "^3.0.1",
     "@japa/runner": "^3.1.4",
     "@swc/core": "1.7.26",
+    "@types/cookie-signature": "^1.1.2",
     "@types/luxon": "^3.4.2",
     "@types/node": "^22.7.5",
     "eslint": "^9.12.0",
@@ -58,17 +62,22 @@
     "typescript": "~5.6"
   },
   "dependencies": {
-    "@adonisjs/core": "^6.14.1",
+    "@adonisjs/ally": "^5.0.2",
+    "@adonisjs/core": "^6.17.0",
     "@adonisjs/cors": "^2.2.1",
+    "@adonisjs/http-server": "^7.4.0",
     "@adonisjs/lucid": "^21.3.0",
     "@adonisjs/mail": "^9.2.2",
+    "@adonisjs/transmit": "^2.0.2",
     "@vinejs/vine": "^2.1.0",
     "axios": "^1.7.9",
+    "cookie-signature": "^1.2.2",
     "edge.js": "^6.2.0",
     "luxon": "^3.5.0",
     "pg": "^8.13.1",
     "reflect-metadata": "^0.2.2",
     "short-uuid": "^5.2.0",
+    "Twitch-driver": "workspace:*",
     "uuid": "^11.0.3",
     "winston": "^3.17.0",
     "winston-daily-rotate-file": "^5.0.0"

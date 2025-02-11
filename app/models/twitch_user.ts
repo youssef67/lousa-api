@@ -1,14 +1,16 @@
 import { DateTime } from 'luxon'
 import axios from 'axios'
-import { BaseModel, belongsTo, column } from '@adonisjs/lucid/orm'
+import { BaseModel, belongsTo, hasOne, column } from '@adonisjs/lucid/orm'
 import ApiError from '#types/api_error'
-import type { BelongsTo } from '@adonisjs/lucid/types/relations'
+import type { BelongsTo, HasOne } from '@adonisjs/lucid/types/relations'
 import User from './user.js'
-import { RefreshTokenResponse } from '#interfaces/spotify_interface'
+import { RefreshTokenResponse } from '#interfaces/twitch_interface'
 import env from '#start/env'
-import { SpotifyUserSession } from '#interfaces/common_interface'
+import { TwitchUserSession } from '#interfaces/common_interface'
+import SpaceStreamer from './space_streamer.js'
+import { ModelStatus } from '#types/model_status'
 
-export default class SpotifyUser extends BaseModel {
+export default class TwitchUser extends BaseModel {
   @column({ isPrimary: true })
   declare id: string
 
@@ -16,19 +18,22 @@ export default class SpotifyUser extends BaseModel {
   declare userId: string
 
   @column()
-  declare spotifyId: string
+  declare twitchId: string
 
   @column()
   declare displayName: string
 
   @column()
-  declare emailSpotify: string
+  declare emailTwitch: string
 
   @column()
-  declare externalUrl: string
+  declare avatarUrl: string
 
   @column()
-  declare nbFollowers: number
+  declare viewCount: number
+
+  @column()
+  declare state: string
 
   @column()
   declare accessToken: string
@@ -40,7 +45,13 @@ export default class SpotifyUser extends BaseModel {
   declare tokenExpiresAt: DateTime
 
   @column()
-  declare scope: string
+  declare isStreamer?: boolean
+
+  @column()
+  declare status: ModelStatus
+
+  @column()
+  declare spaceStreamerId?: string
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -48,17 +59,22 @@ export default class SpotifyUser extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 
+  @hasOne(() => SpaceStreamer, {
+    foreignKey: 'spaceStreamerId',
+  })
+  declare spaceStreamer: HasOne<typeof SpaceStreamer>
+
   @belongsTo(() => User, {
     foreignKey: 'userId',
   })
   declare user: BelongsTo<typeof User>
 
-  serializeAsSession(): SpotifyUserSession {
+  serializeAsSession(): TwitchUserSession {
     const result = {
       id: this.id,
       displayName: this.displayName,
-      email: this.emailSpotify,
-    } as SpotifyUserSession
+      email: this.emailTwitch,
+    } as TwitchUserSession
     return result
   }
 
@@ -68,7 +84,7 @@ export default class SpotifyUser extends BaseModel {
 
   async refreshAccessToken(): Promise<RefreshTokenResponse> {
     const credentials = Buffer.from(
-      `${env.get('SPOTIFY_CLIENT_ID')}:${env.get('SPOTIFY_CLIENT_SECRET')}`
+      `${env.get('TWITCH_CLIENT_ID')}:${env.get('TWITCH_CLIENT_SECRET')}`
     ).toString('base64')
 
     const params = new URLSearchParams({

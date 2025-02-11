@@ -8,6 +8,8 @@ import { UserRole } from '#types/user_role'
 import { generateToken } from '#utils/authentication.utils'
 import { DateTime } from 'luxon'
 import { AuthSignupAnonymousResponse } from '#interfaces/auth_interface'
+import { sign } from 'cookie-signature'
+import env from '#start/env'
 
 const signupAnonymous = async ({ request, response }: HttpContext) => {
   const payload = await request.validateUsing(signupAnonymousValidator)
@@ -37,29 +39,29 @@ const signupAnonymous = async ({ request, response }: HttpContext) => {
   })
 
   const responseJson: AuthSignupAnonymousResponse = {
-    rt: newDevice.refreshToken,
-    at: newDevice.accessToken,
-    di: newDevice.id,
+    rt: `s:${sign(newDevice.refreshToken, env.get('COOKIE_SECRET'))}`,
+    at: `s:${sign(newDevice.accessToken, env.get('COOKIE_SECRET'))}`,
+    di: `s:${sign(newDevice.id, env.get('COOKIE_SECRET'))}`,
     user: anonymousUser.serializeAsSession(),
   }
 
   const TWO_YEARS_IN_SECONDS = 60 * 60 * 24 * 365 * 2
 
-  response.cookie('rt', newDevice.refreshToken, {
+  response.cookie('rt', `s:${sign(newDevice.refreshToken, env.get('COOKIE_SECRET'))}`, {
     httpOnly: true, // JS cannot access this cookie
     secure: false, // Only set if using HTTPS
     sameSite: 'strict', // Send cookie on same-site requests
     maxAge: TWO_YEARS_IN_SECONDS,
   })
 
-  response.cookie('at', newDevice.accessToken, {
+  response.cookie('at', `s:${sign(newDevice.accessToken, env.get('COOKIE_SECRET'))}`, {
     httpOnly: true, // JS cannot access this cookie
     secure: false, // Only set if using HTTPS
     sameSite: 'strict', // Send cookie on same-site requests
     maxAge: TWO_YEARS_IN_SECONDS,
   })
 
-  response.cookie('di', newDevice.id, {
+  response.cookie('di', `s:${sign(newDevice.id, env.get('COOKIE_SECRET'))}`, {
     httpOnly: true, // JS cannot access this cookie
     secure: false, // Only set if using HTTPS
     sameSite: 'strict', // Send cookie on same-site requests

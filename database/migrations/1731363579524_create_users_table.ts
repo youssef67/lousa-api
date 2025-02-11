@@ -13,6 +13,8 @@ export default class extends BaseSchema {
       table.string('role').notNullable()
       table.string('status').notNullable().defaultTo('enabled')
       table.uuid('spotify_user_id').nullable()
+      table.uuid('twitch_user_id').nullable()
+      table.uuid('playlist_selected').nullable()
       table.timestamp('created_at').notNullable()
       table.timestamp('updated_at').notNullable()
     })

@@ -8,6 +8,7 @@
 */
 
 import router from '@adonisjs/core/services/router'
+import transmit from '@adonisjs/transmit/services/main'
 import { middleware } from './kernel.js'
 
 const AuthController = () => import('#controllers/auth/auth_controller')
@@ -44,6 +45,10 @@ router
             router.get('user', [SessionController, 'getUserSession'])
             router.put('user', [SessionController, 'editUser'])
             router.post('user/delete', [SessionController, 'deleteUser'])
+            router.get('validate/streamer/profile', [SessionController, 'checkIfStreamer'])
+            router.get('streamers', [SessionController, 'getStreamersList'])
+            router.post('streamer/profile/delete', [SessionController, 'deleteStreamerProfile'])
+            router.post('playlist/selected', [SessionController, 'setAndGetPlaylistSelected'])
           })
           .use(middleware.authApiToken())
       })
@@ -52,16 +57,10 @@ router
 
     router
       .group(() => {
-        router.get('spotify/callback', [AuthController, 'handleSpotifyCallback'])
-        router.get('twitch/callback', [TwitchController, 'handleTwitchCallback'])
-      })
-      .prefix('auth')
-
-    router
-      .group(() => {
         router
           .group(() => {
             router.post('playlist', [SpotifyController, 'createPlaylist'])
+            router.post('playlist/delete', [SpotifyController, 'deletePlaylist'])
             router.get('playlists', [SpotifyController, 'getAllPlaylists'])
           })
           .use(middleware.authApiToken())
@@ -69,15 +68,32 @@ router
       .use(middleware.authApiKey())
       .prefix('spotify')
 
+    // TWITCH
     router
       .group(() => {
         router
           .group(() => {
-            router.get('login/twitch/user', [AuthController, 'loginSpotifyStreamer'])
+            router.get('login', [TwitchController, 'loginTwitch'])
+            router.get('update/list/streamers', [TwitchController, 'updateStreamersList'])
+            router.post('streamer', [TwitchController, 'addStreamer'])
           })
           .use(middleware.authApiToken())
       })
       .use(middleware.authApiKey())
       .prefix('twitch')
+
+    // Authentication API
+    router
+      .group(() => {
+        router.get('twitch/callback', [TwitchController, 'callbackTwitch'])
+        router.get('spotify/callback', [AuthController, 'handleSpotifyCallback'])
+      })
+      .prefix('auth')
+
+    transmit.registerRoutes((route) => {
+      if (route.getPattern() === '__transmit/events') {
+        route.middleware([])
+      }
+    })
   })
   .prefix('v1')

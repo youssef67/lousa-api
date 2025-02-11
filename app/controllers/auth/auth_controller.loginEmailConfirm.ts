@@ -13,6 +13,8 @@ import { DateTime } from 'luxon'
 import { ModelStatus } from '#types/model_status'
 import env from '#start/env'
 import { UserAuthEmailType } from '#types/user_auth_email_type'
+import { sign } from 'cookie-signature'
+import TwitchUser from '#models/twitch_user'
 
 const loginEmailConfirm = async ({ request, response, currentDevice }: HttpContext) => {
   const payload = await request.validateUsing(loginEmailConfirmValidator)
@@ -98,8 +100,6 @@ const loginEmailConfirm = async ({ request, response, currentDevice }: HttpConte
     const userId = authEmail.userId
 
     await Device.query({ client: transaction }).where('userId', userId).delete()
-    // await User.query({ client: transaction }).where('id', currentUser.id).delete()
-
     newDevice.locale = authEmail.locale
     newDevice.language = currentDevice.language
     newDevice.timezone = authEmail.timezone
@@ -117,10 +117,13 @@ const loginEmailConfirm = async ({ request, response, currentDevice }: HttpConte
     await newDevice.save()
   })
 
+  const load = await userToLogin.loadForSerializationAsSession()
+  console.log(load)
+
   const responseJson: AuthLoginEmailConfirmResponse = {
-    rt: newDevice.refreshToken,
-    at: newDevice.accessToken,
-    di: newDevice.id,
+    rt: `s:${sign(newDevice.refreshToken, env.get('COOKIE_SECRET'))}`,
+    at: `s:${sign(newDevice.accessToken, env.get('COOKIE_SECRET'))}`,
+    di: `s:${sign(newDevice.id, env.get('COOKIE_SECRET'))}`,
     user: userToLogin.serializeAsSession(),
   }
 

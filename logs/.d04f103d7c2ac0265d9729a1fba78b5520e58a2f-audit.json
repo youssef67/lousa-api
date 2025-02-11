@@ -6,14 +6,49 @@
     "auditLog": "logs/.d04f103d7c2ac0265d9729a1fba78b5520e58a2f-audit.json",
     "files": [
         {
-            "date": 1735517401016,
-            "name": "logs/api.log.2024-12-30",
-            "hash": "ce9f17bf7ccd32878457e2e1a141dccaafe8db0d2979de5ba1f98441a98834e7"
+            "date": 1738612329869,
+            "name": "logs/api.log.2025-02-03",
+            "hash": "83cf00e8b019255fbff438e224fef2b88d8553bf6ac8cc4b3c9374733061231a"
         },
         {
-            "date": 1736152247332,
-            "name": "logs/api.log.2025-01-06",
-            "hash": "a3abd8d5b81ebe8757d7b297262f3016176f0d1a9a83d68178a1ed83668afa43"
+            "date": 1738703940595,
+            "name": "logs/api.log.2025-02-04",
+            "hash": "a65dfc97ed679f9dff8db5a6e1e320937c7d16045931faf7dfe4e1bc40001f52"
+        },
+        {
+            "date": 1738746737432,
+            "name": "logs/api.log.2025-02-05",
+            "hash": "c339fcb37fddf2fb4d7b755274e6e4e234752519c3a3c03be8d1ce477faecf4a"
+        },
+        {
+            "date": 1738838481113,
+            "name": "logs/api.log.2025-02-06",
+            "hash": "00a0fdae9db00c509e1fb97a42779325701ae7d5ea17730be66bbbc41da5d329"
+        },
+        {
+            "date": 1738937832176,
+            "name": "logs/api.log.2025-02-07",
+            "hash": "6064969c8e068a7abd610c9d31a78ed305234dc5407546b597101dff66ab3974"
+        },
+        {
+            "date": 1738972979489,
+            "name": "logs/api.log.2025-02-08",
+            "hash": "115f88a0ca19ef6fce4796b3e74f725d96c973e8e5981fdfed491002b5c45fe8"
+        },
+        {
+            "date": 1739134882765,
+            "name": "logs/api.log.2025-02-09",
+            "hash": "eec6b51a9b5ca39f32db4afc191f77ad0d3c20d8180034f5ac8bf3441abab7c2"
+        },
+        {
+            "date": 1739222850197,
+            "name": "logs/api.log.2025-02-10",
+            "hash": "f7ddb173e22ab7c991c2ffb43a256f3fcd25c306af1b689b40bf9f2fa620e337"
+        },
+        {
+            "date": 1739267286065,
+            "name": "logs/api.log.2025-02-11",
+            "hash": "6ed93cbf3d0192d0dee61ceb097c09545cb565f609b4648f66b178463b7040b1"
         }
     ],
     "hashType": "sha256"

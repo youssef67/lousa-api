@@ -6,6 +6,7 @@ import { ModelStatus } from '#types/model_status'
 import { UserSession } from '#interfaces/common_interface'
 import SpotifyUser from './spotify_user.js'
 import Playlist from './playlist.js'
+import TwitchUser from './twitch_user.js'
 
 export default class User extends BaseModel {
   @column({ isPrimary: true })
@@ -35,6 +36,12 @@ export default class User extends BaseModel {
   @column()
   declare spotifyUserId?: string
 
+  @column()
+  declare twitchUserId?: string
+
+  @column()
+  declare playlistSelected?: string
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
@@ -46,10 +53,21 @@ export default class User extends BaseModel {
   })
   declare spotifyUser: HasOne<typeof SpotifyUser>
 
-  @hasMany(() => Playlist, {
+  @hasOne(() => TwitchUser, {
     foreignKey: 'userId',
   })
-  declare playlists: HasMany<typeof Playlist>
+  declare twitchUser: HasOne<typeof TwitchUser>
+
+  async loadForSerializationAsSession() {
+    // we use this hack to allows to call user.load('XXXX')
+    // Otherwise this is not working
+    // cf: https://github.com/orgs/adonisjs/discussions/1872#discussioncomment-404025
+    const user: User = this
+
+    if (this.twitchUserId) {
+      await user.load('twitchUser')
+    }
+  }
 
   serializeAsSession(): UserSession {
     const result = {
@@ -59,6 +77,7 @@ export default class User extends BaseModel {
       email: this.email,
       dateOfBirth: this.dateOfBirth,
       role: this.role,
+      twitchUser: this.twitchUser?.serializeAsSession() || undefined,
     } as UserSession
     return result
   }
