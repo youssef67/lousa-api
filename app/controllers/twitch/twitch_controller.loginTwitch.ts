@@ -1,5 +1,4 @@
 import type { HttpContext } from '@adonisjs/core/http'
-// import transmit from '@adonisjs/transmit/services/main'
 import { TwitchDriver } from 'Twitch-driver'
 import ApiError from '#types/api_error'
 import db from '@adonisjs/lucid/services/db'
@@ -26,9 +25,11 @@ const loginTwitch = async ({ ally, response, request, currentDevice }: HttpConte
   const existingTwitchUser = await TwitchUser.query().where('userId', currentUser.id).first()
   // if (existingTwitchUser) {
   //   throw ApiError.newError('ERROR_INVALID_DATA', 'ACLT-2')
+  //   retourner true si c'est un streamer, QUI refresh du token
   // }
 
   const state = request.encryptedCookie('twitch_oauth_state')
+  console.log('state', state)
 
   if (!state) {
     throw ApiError.newError('ERROR_INVALID_DATA', 'ACLT-3')

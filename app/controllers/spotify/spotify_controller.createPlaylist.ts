@@ -7,6 +7,7 @@ import ApiError from '#types/api_error'
 import { createPlaylistValidator } from '#validators/spotify'
 import Playlist from '#models/playlist'
 import { ModelStatus } from '#types/model_status'
+import User from '#models/user'
 
 const createPlaylist = async ({ response, request, currentDevice }: HttpContext) => {
   const payload = await request.validateUsing(createPlaylistValidator)
@@ -49,11 +50,18 @@ const createPlaylist = async ({ response, request, currentDevice }: HttpContext)
 
   const responseSpotify = createPlaylistOnSpotifyRequest.data
 
+  const spaceStreamer = await User.query()
+    .preload('twitchUser', (twitchUserQuery) => {
+      twitchUserQuery.preload('spaceStreamer')
+    })
+    .where('id', currentUser.id)
+    .firstOrFail()
+
   const newPlaylist = new Playlist()
   await db.transaction(async (trx) => {
     newPlaylist.playlistName = responseSpotify.name
-    newPlaylist.userId = currentUser.id
     newPlaylist.spotifyPlaylistId = responseSpotify.id
+    newPlaylist.spaceStreamerId = spaceStreamer.twitchUser.spaceStreamer.id
     newPlaylist.status = ModelStatus.Enabled
     newPlaylist.useTransaction(trx)
     await newPlaylist.save()

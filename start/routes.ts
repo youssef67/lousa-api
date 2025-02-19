@@ -46,6 +46,7 @@ router
             router.put('user', [SessionController, 'editUser'])
             router.post('user/delete', [SessionController, 'deleteUser'])
             router.get('validate/streamer/profile', [SessionController, 'checkIfStreamer'])
+            router.get('streamer/space', [SessionController, 'getSpaceStreamerData'])
             router.get('streamers', [SessionController, 'getStreamersList'])
             router.post('streamer/profile/delete', [SessionController, 'deleteStreamerProfile'])
             router.post('playlist/selected', [SessionController, 'setAndGetPlaylistSelected'])
@@ -61,7 +62,6 @@ router
           .group(() => {
             router.post('playlist', [SpotifyController, 'createPlaylist'])
             router.post('playlist/delete', [SpotifyController, 'deletePlaylist'])
-            router.get('playlists', [SpotifyController, 'getAllPlaylists'])
           })
           .use(middleware.authApiToken())
       })

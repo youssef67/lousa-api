@@ -6,6 +6,7 @@ export interface UserSession {
   dateOfBirth?: string
   role: string
   twitchUser?: TwitchUserSession
+  spotifyUser?: SpotifyUserSession
 }
 
 export interface SpotifyUserSession {
@@ -21,4 +22,9 @@ export interface TwitchUserSession {
   id: string
   displayName: string
   email: string
+}
+
+export interface StreamerSpaceSession {
+  id: string
+  spaceName: string
 }

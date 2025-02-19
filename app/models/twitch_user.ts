@@ -45,13 +45,13 @@ export default class TwitchUser extends BaseModel {
   declare tokenExpiresAt: DateTime
 
   @column()
-  declare isStreamer?: boolean
+  declare isStreamer: boolean
 
   @column()
   declare status: ModelStatus
 
   @column()
-  declare spaceStreamerId?: string
+  declare spaceStreamerId: string
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -59,9 +59,7 @@ export default class TwitchUser extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 
-  @hasOne(() => SpaceStreamer, {
-    foreignKey: 'spaceStreamerId',
-  })
+  @hasOne(() => SpaceStreamer)
   declare spaceStreamer: HasOne<typeof SpaceStreamer>
 
   @belongsTo(() => User, {
@@ -74,6 +72,7 @@ export default class TwitchUser extends BaseModel {
       id: this.id,
       displayName: this.displayName,
       email: this.emailTwitch,
+      isStreamer: this.isStreamer,
     } as TwitchUserSession
     return result
   }

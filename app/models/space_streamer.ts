@@ -1,6 +1,8 @@
 import { DateTime } from 'luxon'
-import { BaseModel, belongsTo, column } from '@adonisjs/lucid/orm'
-import type { BelongsTo } from '@adonisjs/lucid/types/relations'
+import { BaseModel, column, hasMany, belongsTo } from '@adonisjs/lucid/orm'
+import type { HasMany, BelongsTo } from '@adonisjs/lucid/types/relations'
+import { StreamerSpaceSession } from '#interfaces/common_interface'
+import Playlist from './playlist.js'
 import TwitchUser from './twitch_user.js'
 
 export default class SpaceStreamer extends BaseModel {
@@ -8,22 +10,33 @@ export default class SpaceStreamer extends BaseModel {
   declare id: string
 
   @column()
-  declare TwitchUserId: string
-
-  @column()
   declare nameSpace: string
 
   @column()
   declare nbViewer: number
 
+  @column()
+  declare twitchUserId: string
+
   @belongsTo(() => TwitchUser, {
-    foreignKey: 'TwitchUserId',
+    foreignKey: 'twitchUserId',
   })
   declare twitchUser: BelongsTo<typeof TwitchUser>
+
+  @hasMany(() => Playlist)
+  declare playlists: HasMany<typeof Playlist>
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
+
+  serializeAsSession(): StreamerSpaceSession {
+    const result = {
+      id: this.id,
+      spaceName: this.nameSpace,
+    } as StreamerSpaceSession
+    return result
+  }
 }

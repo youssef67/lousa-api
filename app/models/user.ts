@@ -1,6 +1,6 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, hasOne, hasMany } from '@adonisjs/lucid/orm'
-import type { HasOne, HasMany } from '@adonisjs/lucid/types/relations'
+import { BaseModel, column, hasOne, manyToMany } from '@adonisjs/lucid/orm'
+import type { HasOne, ManyToMany } from '@adonisjs/lucid/types/relations'
 import { UserRole } from '#types/user_role'
 import { ModelStatus } from '#types/model_status'
 import { UserSession } from '#interfaces/common_interface'
@@ -49,7 +49,7 @@ export default class User extends BaseModel {
   declare updatedAt: DateTime
 
   @hasOne(() => SpotifyUser, {
-    foreignKey: 'spotifyUserId',
+    foreignKey: 'userId',
   })
   declare spotifyUser: HasOne<typeof SpotifyUser>
 
@@ -57,6 +57,9 @@ export default class User extends BaseModel {
     foreignKey: 'userId',
   })
   declare twitchUser: HasOne<typeof TwitchUser>
+
+  @manyToMany(() => Playlist)
+  declare favoritesPlaylists: ManyToMany<typeof Playlist>
 
   async loadForSerializationAsSession() {
     // we use this hack to allows to call user.load('XXXX')
@@ -66,6 +69,10 @@ export default class User extends BaseModel {
 
     if (this.twitchUserId) {
       await user.load('twitchUser')
+    }
+
+    if (this.spotifyUserId) {
+      await user.load('spotifyUser')
     }
   }
 
@@ -78,6 +85,7 @@ export default class User extends BaseModel {
       dateOfBirth: this.dateOfBirth,
       role: this.role,
       twitchUser: this.twitchUser?.serializeAsSession() || undefined,
+      spotifyUser: this.spotifyUser?.serializeAsSession() || undefined,
     } as UserSession
     return result
   }

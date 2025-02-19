@@ -4,6 +4,7 @@ import ApiError from '#types/api_error'
 import db from '@adonisjs/lucid/services/db'
 import TwitchUser from '#models/twitch_user'
 import env from '#start/env'
+import SpaceStreamer from '#models/space_streamer'
 
 const checkIfStreamer = async ({ response, currentDevice }: HttpContext) => {
   await currentDevice.load('user')
@@ -30,8 +31,6 @@ const checkIfStreamer = async ({ response, currentDevice }: HttpContext) => {
     params,
   })
 
-  console.log('get info streamer - ', twitchResponse.data.data[0].broadcaster_type)
-
   const infoStreamer = twitchResponse.data.data
 
   if (infoStreamer.length === 0) {
@@ -42,16 +41,26 @@ const checkIfStreamer = async ({ response, currentDevice }: HttpContext) => {
     infoStreamer[0].broadcaster_type === 'partner' ||
     infoStreamer[0].broadcaster_type === 'affiliate'
 
-  console.log('isStreamer - ', isStreamer)
+  const spaceStreamer = new SpaceStreamer()
+
   if (isStreamer) {
     await db.transaction(async (trx) => {
+      spaceStreamer.twitchUserId = existingTwitchUser.id
+      spaceStreamer.nameSpace = existingTwitchUser.displayName
+      spaceStreamer.nbViewer = 0
+      spaceStreamer.useTransaction(trx)
+      await spaceStreamer.save()
+
       existingTwitchUser.isStreamer = isStreamer
+      existingTwitchUser.spaceStreamerId = spaceStreamer.id
       existingTwitchUser.useTransaction(trx)
       await existingTwitchUser.save()
     })
   }
 
-  return response.ok({ result: isStreamer })
+  return response.ok({
+    twitchUser: existingTwitchUser.serializeAsSession(),
+  })
 }
 
 export default checkIfStreamer

@@ -5,6 +5,9 @@ const { default: editUser } = await import('./session_controller.editUser.js')
 const { default: deleteUser } = await import('./session_controller.deleteUser.js')
 const { default: checkIfStreamer } = await import('./session_controller.checkIfStreamer.js')
 const { default: getStreamersList } = await import('./session_controller.getStreamersList.js')
+const { default: getSpaceStreamerData } = await import(
+  './session_controller.getSpaceStreamerData.js'
+)
 const { default: deleteStreamerProfile } = await import(
   './session_controller.deleteStreamerProfile.js'
 )
@@ -43,5 +46,9 @@ export default class SessionController {
 
   async setAndGetPlaylistSelected(context: HttpContext) {
     return await setAndGetPlaylistSelected(context)
+  }
+
+  async getSpaceStreamerData(context: HttpContext) {
+    return await getSpaceStreamerData(context)
   }
 }

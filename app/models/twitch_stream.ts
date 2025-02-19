@@ -23,6 +23,9 @@ export default class TwitchStream extends BaseModel {
   @column()
   declare thumbnailUrl: string
 
+  @column.dateTime()
+  declare dateActivation: DateTime | null
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 

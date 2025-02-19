@@ -117,8 +117,7 @@ const loginEmailConfirm = async ({ request, response, currentDevice }: HttpConte
     await newDevice.save()
   })
 
-  const load = await userToLogin.loadForSerializationAsSession()
-  console.log(load)
+  await userToLogin.loadForSerializationAsSession()
 
   const responseJson: AuthLoginEmailConfirmResponse = {
     rt: `s:${sign(newDevice.refreshToken, env.get('COOKIE_SECRET'))}`,

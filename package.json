@@ -17,7 +17,8 @@
     "test:setup": "docker-compose -p lousa_test -f docker-compose.db.test.yml up -d",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "users:generate": "node ace users:generate"
   },
   "imports": {
     "#controllers/*": "./app/controllers/*.js",
@@ -38,6 +39,7 @@
     "#config/*": "./config/*.js",
     "#types/*": "./types/*.js",
     "#utils/*": "./utils/*.js",
+    "#data/*": "./data/*.js",
     "#interfaces/*": "./app/interfaces/*.js"
   },
   "devDependencies": {
