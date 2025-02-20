@@ -35,11 +35,10 @@ const callbackTwitch = async ({ ally, response, request }: HttpContext) => {
     await db.transaction(async (trx) => {
       existingTwitchUser.twitchId = '38824799' //<---- test line
       // existingTwitchUser.twitchId = user.id <--- this is the original code
-      existingTwitchUser.displayName = 'punkill' //<---- test line
-      // existingTwitchUser.displayName = user.nickName <--- this is the original code
+      existingTwitchUser.twitchUserLogin = 'punkill' //<---- test line
+      // existingTwitchUser.twitchUserLogin = user.nickName <--- this is the original code
       existingTwitchUser.emailTwitch = user.email ?? ''
-      existingTwitchUser.avatarUrl = user.avatarUrl ?? ''
-      existingTwitchUser.viewCount = user.original.view_count
+      existingTwitchUser.twitchUserImgProfile = user.avatarUrl ?? ''
       existingTwitchUser.accessToken = user.token.token
       existingTwitchUser.refreshToken = user.token.refreshToken
       existingTwitchUser.status =

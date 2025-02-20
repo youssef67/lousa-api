@@ -13,6 +13,7 @@ import { middleware } from './kernel.js'
 
 const AuthController = () => import('#controllers/auth/auth_controller')
 const SessionController = () => import('#controllers/session/session_controller')
+const ViewerController = () => import('#controllers/viewer/viewer_controller')
 const SpotifyController = () => import('#controllers/spotify/spotify_controller')
 const TwitchController = () => import('#controllers/twitch/twitch_controller')
 
@@ -46,7 +47,7 @@ router
             router.put('user', [SessionController, 'editUser'])
             router.post('user/delete', [SessionController, 'deleteUser'])
             router.get('validate/streamer/profile', [SessionController, 'checkIfStreamer'])
-            router.get('streamer/space', [SessionController, 'getSpaceStreamerData'])
+            router.post('streamer/space', [SessionController, 'getSpaceStreamerData'])
             router.get('streamers', [SessionController, 'getStreamersList'])
             router.post('streamer/profile/delete', [SessionController, 'deleteStreamerProfile'])
             router.post('playlist/selected', [SessionController, 'setAndGetPlaylistSelected'])
@@ -55,6 +56,18 @@ router
       })
       .use(middleware.authApiKey())
       .prefix('session')
+
+    router
+      .group(() => {
+        router
+          .group(() => {
+            router.post('favorite/playlist/add', [ViewerController, 'addFavoritePlaylist'])
+            router.post('favorite/playlist/delete', [ViewerController, 'deleteFavoritePlaylist'])
+          })
+          .use(middleware.authApiToken())
+      })
+      .use(middleware.authApiKey())
+      .prefix('viewer')
 
     router
       .group(() => {

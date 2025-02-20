@@ -58,7 +58,9 @@ export default class User extends BaseModel {
   })
   declare twitchUser: HasOne<typeof TwitchUser>
 
-  @manyToMany(() => Playlist)
+  @manyToMany(() => Playlist, {
+    pivotTable: 'favorite_playlists_users',
+  })
   declare favoritesPlaylists: ManyToMany<typeof Playlist>
 
   async loadForSerializationAsSession() {

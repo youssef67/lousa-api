@@ -15,3 +15,10 @@ export const setAndGetPlaylistSelectedValidator = vine.compile(
     playlistId: vine.string().nullable(),
   })
 )
+
+export const getSpaceStreamerDataValidator = vine.compile(
+  vine.object({
+    spaceStreamerId: vine.string().optional(),
+    twitchUserId: vine.string().optional(),
+  })
+)

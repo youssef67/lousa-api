@@ -6,7 +6,7 @@ import { generateToken } from '#utils/authentication.utils'
 import { DateTime } from 'luxon'
 import { streamersList } from '#data/streamers_list'
 import User from '#models/user'
-import TwitchStream from '../app/models/twitch_stream.js'
+import SpaceStreamer from '../app/models/space_streamer.js'
 import { ModelStatus } from '#types/model_status'
 
 export default class UsersGenerate extends BaseCommand {
@@ -51,7 +51,7 @@ export default class UsersGenerate extends BaseCommand {
 
       const users = await this.createUsers()
 
-      await this.setUsersStreamerProfile()
+      // await this.setUsersStreamerProfile()
       this.logger.success(`Successfully generated ${users.length} users!`)
     } catch (error) {
       console.error(error) // Log the full error
@@ -70,16 +70,9 @@ export default class UsersGenerate extends BaseCommand {
     return deviceFactoryModule.DeviceFactory
   }
 
-  private async getTwitchStreamsFactory() {
-    const twitchStreamsFactoryModule = await import(
-      '../database/factories/twitch_stream_factory.js'
-    )
-    return twitchStreamsFactoryModule.TwitchStreamFactory
-  }
-
-  private async getTwitchUsersFactory() {
-    const twitchUsersFactoryModule = await import('../database/factories/twitch_user_factory.js')
-    return twitchUsersFactoryModule.TwitchUserFactory
+  private async getSpaceStreamerFactory() {
+    const spaceStreamFactoryModule = await import('../database/factories/space_streamer_factory.js')
+    return spaceStreamFactoryModule.SpaceStreamFactory
   }
 
   async cleanOldData() {
@@ -89,8 +82,8 @@ export default class UsersGenerate extends BaseCommand {
     const DeviceModel = await import('../app/models/device.js')
     const device = DeviceModel.default
 
-    const TwitchStreamerModel = await import('../app/models/twitch_stream.js')
-    const twitchStream = TwitchStreamerModel.default
+    const SpaceStreamerModel = await import('../app/models/space_streamer.js')
+    const spaceStreamer = SpaceStreamerModel.default
 
     // Clear admin user if it exists
     const isAdminAlreadyExist = await user.query().where('role', UserRole.Admin).first()
@@ -104,7 +97,7 @@ export default class UsersGenerate extends BaseCommand {
     // Delete all devices created in previous run
     await device.query().delete()
     // Delete all twitch streams created in previous run
-    await twitchStream.query().delete()
+    await spaceStreamer.query().delete()
   }
 
   async createAdminUser() {
@@ -147,14 +140,13 @@ export default class UsersGenerate extends BaseCommand {
   async createStreamersList() {
     // use a array of data here
     for (const streamer of streamersList) {
-      const twitchStreamsFactory = await this.getTwitchStreamsFactory()
+      const spaceStreamsFactory = await this.getSpaceStreamerFactory()
 
-      twitchStreamsFactory
+      spaceStreamsFactory
         .merge({
           twitchId: streamer.twitchId,
-          userLogin: streamer.userLogin,
-          userName: streamer.userName,
-          thumbnailUrl: streamer.thumbnailUrl,
+          twitchUserLogin: streamer.userLogin,
+          spaceStreamerImg: streamer.thumbnailUrl,
         })
         .create()
     }
@@ -212,34 +204,31 @@ export default class UsersGenerate extends BaseCommand {
     return UsersArray
   }
 
-  async setUsersStreamerProfile() {
-    const twitchUsersFactory = await this.getTwitchUsersFactory()
+  // async setUsersStreamerProfile() {
+  //   const twitchUsersFactory = await this.getTwitchUsersFactory()
 
-    const randomStreamers = await TwitchStream.query()
-      .orderByRaw('RANDOM()')
-      .limit(Number.parseInt(this.numberStreamer!))
+  //   const randomStreamers = await SpaceStreamer.query()
+  //     .orderByRaw('RANDOM()')
+  //     .limit(Number.parseInt(this.numberStreamer!))
 
-    const userStreamers: User[] = await User.query().where('email', 'ILIKE', '%streamer%')
+  //   const userStreamers: User[] = await User.query().where('email', 'ILIKE', '%streamer%')
 
-    for (const [index, streamer] of randomStreamers.entries()) {
-      const user = userStreamers[index]
+  //   for (const [index, streamer] of randomStreamers.entries()) {
+  //     const user = userStreamers[index]
 
-      streamer.dateActivation = DateTime.fromJSDate(new Date())
-      streamer.userId = user.id
-      streamer.save()
+  //     const twitchUser = await twitchUsersFactory
+  //       .merge({
+  //         userId: user.id,
+  //         twitchId: streamer.twitchId,
+  //         twitchUserLogin: streamer.twitchUserLogin,
+  //         emailTwitch: user.email,
+  //         twitchUserImgProfile: streamer.spaceStreamerImg,
+  //         status: ModelStatus.Enabled,
+  //       })
+  //       .create()
 
-      twitchUsersFactory
-        .merge({
-          userId: user.id,
-          twitchId: streamer.twitchId,
-          displayName: streamer.userLogin,
-          emailTwitch: user.email,
-          avatarUrl: streamer.thumbnailUrl,
-          viewCount: 0,
-          status: ModelStatus.Enabled,
-          isStreamer: true,
-        })
-        .create()
-    }
-  }
+  //     streamer.twitchUserId = twitchUser.id
+  //     streamer.save()
+  //   }
+  // }
 }

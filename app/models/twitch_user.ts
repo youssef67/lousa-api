@@ -21,16 +21,13 @@ export default class TwitchUser extends BaseModel {
   declare twitchId: string
 
   @column()
-  declare displayName: string
+  declare twitchUserLogin: string
 
   @column()
   declare emailTwitch: string
 
   @column()
-  declare avatarUrl: string
-
-  @column()
-  declare viewCount: number
+  declare twitchUserImgProfile: string
 
   @column()
   declare state: string
@@ -43,9 +40,6 @@ export default class TwitchUser extends BaseModel {
 
   @column()
   declare tokenExpiresAt: DateTime
-
-  @column()
-  declare isStreamer: boolean
 
   @column()
   declare status: ModelStatus
@@ -70,9 +64,9 @@ export default class TwitchUser extends BaseModel {
   serializeAsSession(): TwitchUserSession {
     const result = {
       id: this.id,
-      displayName: this.displayName,
+      displayName: this.twitchUserLogin,
       email: this.emailTwitch,
-      isStreamer: this.isStreamer,
+      spaceStreamerId: this.spaceStreamerId,
     } as TwitchUserSession
     return result
   }

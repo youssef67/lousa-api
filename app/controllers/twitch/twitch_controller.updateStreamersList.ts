@@ -5,7 +5,6 @@ import ApiError from '#types/api_error'
 import db from '@adonisjs/lucid/services/db'
 import TwitchUser from '#models/twitch_user'
 import env from '#start/env'
-import TwitchStream from '#models/twitch_stream'
 
 const updateStreamersList = async ({ response, currentDevice }: HttpContext) => {
   await currentDevice.load('user')
@@ -78,22 +77,22 @@ const updateStreamersList = async ({ response, currentDevice }: HttpContext) => 
 
     await db.transaction(async (trx) => {
       for (const stream of filteredStreamWithThumbnails) {
-        if (stream !== undefined) {
-          const existingStream = await TwitchStream.findBy('user_login', stream.broadcaster_login)
+        // if (stream !== undefined) {
+        //   const existingStream = await TwitchStream.findBy('user_login', stream.broadcaster_login)
 
-          if (!existingStream) {
-            await TwitchStream.create(
-              {
-                userId: currentUser.id,
-                twitchId: stream.id,
-                userLogin: stream.broadcaster_login,
-                userName: stream.display_name,
-                thumbnailUrl: stream.thumbnail_url,
-              },
-              { client: trx }
-            )
-          }
-        }
+        //   if (!existingStream) {
+        //     await TwitchStream.create(
+        //       {
+        //         userId: currentUser.id,
+        //         twitchId: stream.id,
+        //         userLogin: stream.broadcaster_login,
+        //         userName: stream.display_name,
+        //         thumbnailUrl: stream.thumbnail_url,
+        //       },
+        //       { client: trx }
+        //     )
+        //   }
+        // }
       }
     })
 

@@ -1,12 +1,10 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { addStreamerValidator } from '#validators/twitch'
 import axios from 'axios'
-import { DateTime } from 'luxon'
 import ApiError from '#types/api_error'
 import db from '@adonisjs/lucid/services/db'
 import TwitchUser from '#models/twitch_user'
 import env from '#start/env'
-import TwitchStream from '#models/twitch_stream'
 
 const addStreamer = async ({ response, request, currentDevice }: HttpContext) => {
   const payload = await request.validateUsing(addStreamerValidator)
@@ -42,15 +40,15 @@ const addStreamer = async ({ response, request, currentDevice }: HttpContext) =>
 
   const streamer = twitchData[0]
 
-  const newStreamer = new TwitchStream()
-  await db.transaction(async (trx) => {
-    newStreamer.userId = currentUser.id
-    newStreamer.userLogin = streamer.broadcaster_login
-    newStreamer.userName = streamer.display_name
-    newStreamer.thumbnailUrl = streamer.thumbnail_url
-    newStreamer.useTransaction(trx)
-    await newStreamer.save()
-  })
+  // const newStreamer = new TwitchStream()
+  // await db.transaction(async (trx) => {
+  //   newStreamer.userId = currentUser.id
+  //   newStreamer.userLogin = streamer.broadcaster_login
+  //   newStreamer.userName = streamer.display_name
+  //   newStreamer.thumbnailUrl = streamer.thumbnail_url
+  //   newStreamer.useTransaction(trx)
+  //   await newStreamer.save()
+  // })
 
   return response.ok({ result: true })
 }

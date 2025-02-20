@@ -18,6 +18,15 @@ export default class SpaceStreamer extends BaseModel {
   @column()
   declare twitchUserId: string
 
+  @column()
+  declare twitchId: string
+
+  @column()
+  declare twitchUserLogin: string
+
+  @column()
+  declare spaceStreamerImg: string
+
   @belongsTo(() => TwitchUser, {
     foreignKey: 'twitchUserId',
   })
@@ -36,6 +45,9 @@ export default class SpaceStreamer extends BaseModel {
     const result = {
       id: this.id,
       spaceName: this.nameSpace,
+      twitchUserId: this.twitchUserId,
+      twitchUserLogin: this.twitchUserLogin,
+      spaceStreamerImg: this.spaceStreamerImg,
     } as StreamerSpaceSession
     return result
   }

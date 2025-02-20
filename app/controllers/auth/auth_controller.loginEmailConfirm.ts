@@ -14,7 +14,6 @@ import { ModelStatus } from '#types/model_status'
 import env from '#start/env'
 import { UserAuthEmailType } from '#types/user_auth_email_type'
 import { sign } from 'cookie-signature'
-import TwitchUser from '#models/twitch_user'
 
 const loginEmailConfirm = async ({ request, response, currentDevice }: HttpContext) => {
   const payload = await request.validateUsing(loginEmailConfirmValidator)

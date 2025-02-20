@@ -37,21 +37,36 @@ const checkIfStreamer = async ({ response, currentDevice }: HttpContext) => {
     throw ApiError.newError('ERROR_INVALID_DATA', 'TCGS-2')
   }
 
-  const isStreamer =
+  let isStreamer =
     infoStreamer[0].broadcaster_type === 'partner' ||
     infoStreamer[0].broadcaster_type === 'affiliate'
 
-  const spaceStreamer = new SpaceStreamer()
+  // Pour la phase de développement, je set le is streamer à true
+  // TODO : A supprimer en prod
+  isStreamer = true
 
   if (isStreamer) {
+    const spaceStreamerExisting = await SpaceStreamer.query()
+      .where('twitch_id', existingTwitchUser.twitchId)
+      .first()
+
+    let spaceStreamer: SpaceStreamer
+
+    if (!spaceStreamerExisting) {
+      spaceStreamer = new SpaceStreamer()
+    } else {
+      spaceStreamer = spaceStreamerExisting
+    }
+
     await db.transaction(async (trx) => {
       spaceStreamer.twitchUserId = existingTwitchUser.id
-      spaceStreamer.nameSpace = existingTwitchUser.displayName
-      spaceStreamer.nbViewer = 0
+      spaceStreamer.nameSpace = existingTwitchUser.twitchUserLogin
+      spaceStreamer.twitchId = existingTwitchUser.twitchId
+      spaceStreamer.twitchUserLogin = existingTwitchUser.twitchUserLogin
+      spaceStreamer.spaceStreamerImg = existingTwitchUser.twitchUserImgProfile
       spaceStreamer.useTransaction(trx)
       await spaceStreamer.save()
 
-      existingTwitchUser.isStreamer = isStreamer
       existingTwitchUser.spaceStreamerId = spaceStreamer.id
       existingTwitchUser.useTransaction(trx)
       await existingTwitchUser.save()

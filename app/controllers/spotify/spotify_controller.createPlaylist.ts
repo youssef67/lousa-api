@@ -57,11 +57,12 @@ const createPlaylist = async ({ response, request, currentDevice }: HttpContext)
     .where('id', currentUser.id)
     .firstOrFail()
 
+  console.log(spaceStreamer.twitchUser.spaceStreamer)
   const newPlaylist = new Playlist()
   await db.transaction(async (trx) => {
     newPlaylist.playlistName = responseSpotify.name
     newPlaylist.spotifyPlaylistId = responseSpotify.id
-    newPlaylist.spaceStreamerId = spaceStreamer.twitchUser.spaceStreamer.id
+    newPlaylist.spaceStreamerId = spaceStreamer.twitchUser.spaceStreamerId
     newPlaylist.status = ModelStatus.Enabled
     newPlaylist.useTransaction(trx)
     await newPlaylist.save()
