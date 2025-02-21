@@ -18,6 +18,11 @@ const getSpaceStreamerData = async ({ response, request, currentDevice }: HttpCo
   const playlistsFavoritesOfUser = await user.related('favoritesPlaylists').query()
   const favoritePlaylistIds = new Set(playlistsFavoritesOfUser.map((playlist) => playlist.id))
 
+  const SpaceStreamerFavoritesOfUser = await user.related('favoritesSpaceStreamers').query()
+  const favoriteSpaceStreamerIds = new Set(
+    SpaceStreamerFavoritesOfUser.map((spaceStreamer) => spaceStreamer.id)
+  )
+
   let id: string | undefined
 
   if ('spaceStreamerId' in payload && payload.spaceStreamerId) {
@@ -40,6 +45,8 @@ const getSpaceStreamerData = async ({ response, request, currentDevice }: HttpCo
     throw ApiError.newError('ERROR_INVALID_DATA', 'SCGS-4')
   }
 
+  const isFavoriteSpaceStreamer = favoriteSpaceStreamerIds.has(spaceStreamer.id)
+
   await spaceStreamer.load('playlists')
 
   const playlists = spaceStreamer.playlists.map((playlist) => ({
@@ -49,7 +56,10 @@ const getSpaceStreamerData = async ({ response, request, currentDevice }: HttpCo
 
   console.log(playlists)
 
-  return response.ok({ spaceStreamer: spaceStreamer.serializeAsSession(), playlists })
+  return response.ok({
+    spaceStreamer: { ...spaceStreamer.serializeAsSession(), isFavoriteSpaceStreamer },
+    playlists,
+  })
 }
 
 export default getSpaceStreamerData

@@ -203,32 +203,4 @@ export default class UsersGenerate extends BaseCommand {
 
     return UsersArray
   }
-
-  // async setUsersStreamerProfile() {
-  //   const twitchUsersFactory = await this.getTwitchUsersFactory()
-
-  //   const randomStreamers = await SpaceStreamer.query()
-  //     .orderByRaw('RANDOM()')
-  //     .limit(Number.parseInt(this.numberStreamer!))
-
-  //   const userStreamers: User[] = await User.query().where('email', 'ILIKE', '%streamer%')
-
-  //   for (const [index, streamer] of randomStreamers.entries()) {
-  //     const user = userStreamers[index]
-
-  //     const twitchUser = await twitchUsersFactory
-  //       .merge({
-  //         userId: user.id,
-  //         twitchId: streamer.twitchId,
-  //         twitchUserLogin: streamer.twitchUserLogin,
-  //         emailTwitch: user.email,
-  //         twitchUserImgProfile: streamer.spaceStreamerImg,
-  //         status: ModelStatus.Enabled,
-  //       })
-  //       .create()
-
-  //     streamer.twitchUserId = twitchUser.id
-  //     streamer.save()
-  //   }
-  // }
 }

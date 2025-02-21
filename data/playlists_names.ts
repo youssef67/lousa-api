@@ -1,4 +1,4 @@
-export const playlists = [
+export const playlistNames = [
   { playlistName: 'Vibes Nocturnes', spotifyId: '3FjL9qXyA6bM7zTpG0KdNv' },
   { playlistName: 'Epic Gaming Hits', spotifyId: '1HkP2mQvR8nY5XtZb0JdWs' },
   { playlistName: 'Chill & Relax', spotifyId: '9ZlK4mXyA1pQ8JvT5G7NdB' },

@@ -3,7 +3,7 @@ import { deleteFavoritePlaylistValidator } from '#validators/viewer'
 import ApiError from '#types/api_error'
 import Playlist from '#models/playlist'
 
-const deleteFavoritePlaylist = async ({ response, request, currentDevice }: HttpContext) => {
+const deleteFavoriteStreamer = async ({ response, request, currentDevice }: HttpContext) => {
   const payload = await request.validateUsing(deleteFavoritePlaylistValidator)
   await currentDevice.load('user')
   const currentUser = currentDevice.user
@@ -11,7 +11,7 @@ const deleteFavoritePlaylist = async ({ response, request, currentDevice }: Http
   const playlistExisting = Playlist.query().where('id', payload.playlistId).first()
 
   if (!playlistExisting) {
-    throw ApiError.newError('ERROR_INVALID_DATA', 'VCFP-1')
+    throw ApiError.newError('ERROR_INVALID_DATA', 'VCDFP-1')
   }
 
   await currentUser.related('favoritesPlaylists').detach([payload.playlistId])
@@ -19,4 +19,4 @@ const deleteFavoritePlaylist = async ({ response, request, currentDevice }: Http
   return response.ok({ result: true })
 }
 
-export default deleteFavoritePlaylist
+export default deleteFavoriteStreamer

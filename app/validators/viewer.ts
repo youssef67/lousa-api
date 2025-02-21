@@ -11,3 +11,15 @@ export const deleteFavoritePlaylistValidator = vine.compile(
     playlistId: vine.string(),
   })
 )
+
+export const addFavoriteStreamerValidator = vine.compile(
+  vine.object({
+    spaceStreamerId: vine.string(),
+  })
+)
+
+export const deleteFavoriteStreamerValidator = vine.compile(
+  vine.object({
+    spaceStreamerId: vine.string(),
+  })
+)

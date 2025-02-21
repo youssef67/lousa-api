@@ -11,7 +11,7 @@ const addFavoritePlaylist = async ({ response, request, currentDevice }: HttpCon
   const playlistExisting = Playlist.query().where('id', payload.playlistId).first()
 
   if (!playlistExisting) {
-    throw ApiError.newError('ERROR_INVALID_DATA', 'VCFP-1')
+    throw ApiError.newError('ERROR_INVALID_DATA', 'VCAFP-1')
   }
 
   await currentUser.related('favoritesPlaylists').attach([payload.playlistId])

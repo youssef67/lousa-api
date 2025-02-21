@@ -3,6 +3,10 @@ const { default: addFavoritePlaylist } = await import('./viewer_controller.addFa
 const { default: deleteFavoritePlaylist } = await import(
   './viewer_controller.deleteFavoritePlaylist.js'
 )
+const { default: deleteFavoriteStreamer } = await import(
+  './viewer_controller.deleteFavoriteStreamer.js'
+)
+const { default: addFavoriteStreamer } = await import('./viewer_controller.addFavoriteStreamer.js')
 
 export default class ViewerController {
   async addFavoritePlaylist(context: HttpContext) {
@@ -11,5 +15,13 @@ export default class ViewerController {
 
   async deleteFavoritePlaylist(context: HttpContext) {
     return await deleteFavoritePlaylist(context)
+  }
+
+  async deleteFavoriteStreamer(context: HttpContext) {
+    return await deleteFavoriteStreamer(context)
+  }
+
+  async addFavoriteStreamer(context: HttpContext) {
+    return await addFavoriteStreamer(context)
   }
 }

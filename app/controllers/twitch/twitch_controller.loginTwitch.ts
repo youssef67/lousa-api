@@ -29,7 +29,6 @@ const loginTwitch = async ({ ally, response, request, currentDevice }: HttpConte
   // }
 
   const state = request.encryptedCookie('twitch_oauth_state')
-  console.log('state', state)
 
   if (!state) {
     throw ApiError.newError('ERROR_INVALID_DATA', 'ACLT-3')

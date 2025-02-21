@@ -4,7 +4,7 @@ import { UserRole } from '#types/user_role'
 import { randomUUID } from 'node:crypto'
 import { generateToken } from '#utils/authentication.utils'
 import { DateTime } from 'luxon'
-import { playlists } from '#data/playlists_names'
+import { playlistNames } from '#data/playlists_names'
 import SpaceStreamer from '../app/models/space_streamer.js'
 import TwitchUser from '#models/twitch_user'
 import Playlist from '#models/playlist'
@@ -91,7 +91,7 @@ export default class PlaylistsGenerate extends BaseCommand {
     let nbPlaylists = Number.parseInt(this.numberPlaylists!)
 
     for (let index = 0; index < nbPlaylists; index++) {
-      const randomPlaylist = playlists[Math.floor(Math.random() * playlists.length)]
+      const randomPlaylist = playlistNames[Math.floor(Math.random() * playlistNames.length)]
 
       await playlistsFactory
         .merge({

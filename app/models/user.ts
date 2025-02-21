@@ -7,6 +7,7 @@ import { UserSession } from '#interfaces/common_interface'
 import SpotifyUser from './spotify_user.js'
 import Playlist from './playlist.js'
 import TwitchUser from './twitch_user.js'
+import SpaceStreamer from './space_streamer.js'
 
 export default class User extends BaseModel {
   @column({ isPrimary: true })
@@ -62,6 +63,11 @@ export default class User extends BaseModel {
     pivotTable: 'favorite_playlists_users',
   })
   declare favoritesPlaylists: ManyToMany<typeof Playlist>
+
+  @manyToMany(() => SpaceStreamer, {
+    pivotTable: 'favorite_streamers_users',
+  })
+  declare favoritesSpaceStreamers: ManyToMany<typeof SpaceStreamer>
 
   async loadForSerializationAsSession() {
     // we use this hack to allows to call user.load('XXXX')

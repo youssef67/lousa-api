@@ -63,6 +63,8 @@ router
           .group(() => {
             router.post('favorite/playlist/add', [ViewerController, 'addFavoritePlaylist'])
             router.post('favorite/playlist/delete', [ViewerController, 'deleteFavoritePlaylist'])
+            router.post('favorite/streamer/add', [ViewerController, 'addFavoriteStreamer'])
+            router.post('favorite/streamer/delete', [ViewerController, 'deleteFavoriteStreamer'])
           })
           .use(middleware.authApiToken())
       })
