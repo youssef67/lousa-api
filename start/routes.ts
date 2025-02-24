@@ -61,6 +61,7 @@ router
       .group(() => {
         router
           .group(() => {
+            router.get('', [ViewerController, 'getViewerData'])
             router.post('favorite/playlist/add', [ViewerController, 'addFavoritePlaylist'])
             router.post('favorite/playlist/delete', [ViewerController, 'deleteFavoritePlaylist'])
             router.post('favorite/streamer/add', [ViewerController, 'addFavoriteStreamer'])

@@ -40,28 +40,27 @@ export default class SpaceStreamerGenerate extends BaseCommand {
     }
   }
 
-  // Utility function to load the user factory
-  private async getUserFactory() {
-    const userUserModule = await import('../database/factories/user_factory.js')
-    return userUserModule.UserFactory
-  }
-
-  private async getTwitchUserFactory() {
-    const TwitchUserFactoryModule = await import('../database/factories/twitch_user_factory.js')
-    return TwitchUserFactoryModule.TwitchUserFactory
-  }
-
-  private async getSpaceStreamerFactory() {
-    const spaceStreamFactoryModule = await import('../database/factories/space_streamer_factory.js')
-    return spaceStreamFactoryModule.SpaceStreamFactory
-  }
-
   private async getSpacePlaylistFactory() {
     const playlistFactoryModule = await import('../database/factories/playlist_factory.js')
     return playlistFactoryModule.PlaylistFactory
   }
 
   async cleanOldData() {
+    const viewers = await User.query().whereNotNull('playlist_selected')
+
+    if (!viewers) {
+      throw new Error(`Users with playlist_selected at NULL are not found`)
+    }
+
+    for (const viewer of viewers) {
+      await viewer.related('favoritesPlaylists').detach()
+      await viewer.related('favoritesSpaceStreamers').detach()
+
+      await User.query().where('id', viewer.id).update({
+        playlistSelected: null,
+      })
+    }
+
     const streamerUser = await User.query().whereLike('email', '%streamer%')
     const streamerUserIds = new Set(streamerUser.map((user) => user.id))
 
@@ -103,7 +102,7 @@ export default class SpaceStreamerGenerate extends BaseCommand {
       userId: user.id,
       spaceStreamerId: randomSpaceStreamers[index].id,
       twitchId: randomUUID(),
-      twitchUserLogin: randomSpaceStreamers[index].nameSpace,
+      twitchUserLogin: randomSpaceStreamers[index].twitchUserLogin,
       emailTwitch: user.email,
       twitchUserImgProfile: randomSpaceStreamers[index].spaceStreamerImg,
       status: ModelStatus.Enabled,

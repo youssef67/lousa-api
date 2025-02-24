@@ -19,8 +19,8 @@
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
     "users:generate": "node ace users:generate",
-    "playlists:generate": "node ace playlists:generate",
-    "spaces:generate": "node ace space:generate"
+    "spaces:generate": "node ace spaces:generate",
+    "viewers:generate": "node ace viewers:generate"
 
   },
   "imports": {
