@@ -8,6 +8,9 @@ const { default: deleteFavoriteStreamer } = await import(
 )
 const { default: addFavoriteStreamer } = await import('./viewer_controller.addFavoriteStreamer.js')
 const { default: getViewerData } = await import('./viewer_controller.getViewerData.js')
+const { default: setAndGetPlaylistSelected } = await import(
+  './viewer_controller.setAndGetPlaylistSelected.js'
+)
 
 export default class ViewerController {
   async addFavoritePlaylist(context: HttpContext) {
@@ -28,5 +31,9 @@ export default class ViewerController {
 
   async getViewerData(context: HttpContext) {
     return await getViewerData(context)
+  }
+
+  async setAndGetPlaylistSelected(context: HttpContext) {
+    return await setAndGetPlaylistSelected(context)
   }
 }

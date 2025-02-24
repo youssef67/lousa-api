@@ -23,3 +23,9 @@ export const deleteFavoriteStreamerValidator = vine.compile(
     spaceStreamerId: vine.string(),
   })
 )
+
+export const setAndGetPlaylistSelectedValidator = vine.compile(
+  vine.object({
+    playlistId: vine.string().nullable(),
+  })
+)

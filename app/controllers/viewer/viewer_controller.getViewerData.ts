@@ -1,6 +1,7 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import ApiError from '#types/api_error'
 import User from '#models/user'
+import Playlist from '#models/playlist'
 
 const getViewerData = async ({ response, request, currentDevice }: HttpContext) => {
   await currentDevice.load('user')
@@ -15,6 +16,24 @@ const getViewerData = async ({ response, request, currentDevice }: HttpContext) 
   if (!viewer) {
     throw ApiError.newError('ERROR_INVALID_DATA', 'VCGV-1')
   }
+
+  const playlistSelected = await Playlist.findBy('id', currentUser.playlistSelected)
+
+  let viewerData = null
+  if (playlistSelected) {
+    await playlistSelected.load('spaceStreamer')
+
+    viewerData = {
+      playlistSelected: {
+        id: playlistSelected.id,
+        playlistName: playlistSelected.playlistName,
+        spaceStreamerName: playlistSelected.spaceStreamer.nameSpace,
+        spaceStreamerImg: playlistSelected.spaceStreamer.spaceStreamerImg,
+      },
+    }
+  }
+
+  console.log(viewerData)
 
   const spaceStreamersFavorites = viewer.favoritesSpaceStreamers.map((spaceStreamer) => {
     return {
@@ -37,7 +56,12 @@ const getViewerData = async ({ response, request, currentDevice }: HttpContext) 
     })
   )
 
-  return response.ok({ spaceStreamersFavorites, playlistsFavorites })
+  return response.ok({
+    data: {
+      viewerData,
+      favorites: { spaceStreamers: spaceStreamersFavorites, playlists: playlistsFavorites },
+    },
+  })
 }
 
 export default getViewerData

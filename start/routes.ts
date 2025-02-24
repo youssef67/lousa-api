@@ -66,6 +66,7 @@ router
             router.post('favorite/playlist/delete', [ViewerController, 'deleteFavoritePlaylist'])
             router.post('favorite/streamer/add', [ViewerController, 'addFavoriteStreamer'])
             router.post('favorite/streamer/delete', [ViewerController, 'deleteFavoriteStreamer'])
+            router.post('playlist/selected', [ViewerController, 'setAndGetPlaylistSelected'])
           })
           .use(middleware.authApiToken())
       })
