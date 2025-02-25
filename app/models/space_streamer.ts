@@ -4,6 +4,7 @@ import type { HasMany, BelongsTo } from '@adonisjs/lucid/types/relations'
 import { StreamerSpaceSession } from '#interfaces/common_interface'
 import Playlist from './playlist.js'
 import TwitchUser from './twitch_user.js'
+import SpotifyUser from './spotify_user.js'
 
 export default class SpaceStreamer extends BaseModel {
   @column({ isPrimary: true })
@@ -19,6 +20,9 @@ export default class SpaceStreamer extends BaseModel {
   declare twitchUserId: string
 
   @column()
+  declare spotifyUserId: string
+
+  @column()
   declare twitchId: string
 
   @column()
@@ -31,6 +35,11 @@ export default class SpaceStreamer extends BaseModel {
     foreignKey: 'twitchUserId',
   })
   declare twitchUser: BelongsTo<typeof TwitchUser>
+
+  @belongsTo(() => SpotifyUser, {
+    foreignKey: 'spotifyUserId',
+  })
+  declare spotifyUser: BelongsTo<typeof SpotifyUser>
 
   @hasMany(() => Playlist)
   declare playlists: HasMany<typeof Playlist>

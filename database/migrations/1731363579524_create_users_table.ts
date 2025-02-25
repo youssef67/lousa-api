@@ -12,6 +12,7 @@ export default class extends BaseSchema {
       table.timestamp('date_of_birth').nullable()
       table.string('role').notNullable()
       table.string('status').notNullable().defaultTo('enabled')
+      // TODO : remettre en unique() pour le twitch_user_id et le spotify_user_id
       table.uuid('spotify_user_id').nullable()
       table.uuid('twitch_user_id').nullable()
       table.uuid('playlist_selected').nullable()

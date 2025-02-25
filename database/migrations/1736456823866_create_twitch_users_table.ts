@@ -7,7 +7,8 @@ export default class extends BaseSchema {
     this.schema.createTable(this.tableName, (table) => {
       table.uuid('id').primary().defaultTo(this.db.rawQuery('uuid_generate_v4()').knexQuery)
       table.uuid('user_id').notNullable().references('id').inTable('users').onDelete('CASCADE')
-      table.string('twitch_id').nullable().unique()
+      // TODO : remettre en unique()
+      table.string('twitch_id').nullable()
       table.string('twitch_user_login').nullable().unique()
       table.string('email_twitch').nullable().unique()
       table.string('twitch_user_img_profile').nullable().unique()

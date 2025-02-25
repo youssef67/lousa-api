@@ -23,6 +23,8 @@ const loginTwitch = async ({ ally, response, request, currentDevice }: HttpConte
 
   // Vérification de l'existence d'un utilisateur twitch déjà enregistré
   const existingTwitchUser = await TwitchUser.query().where('userId', currentUser.id).first()
+
+  // TODO : si twitchUser existe, faire un refresh de ses token
   // if (existingTwitchUser) {
   //   throw ApiError.newError('ERROR_INVALID_DATA', 'ACLT-2')
   //   retourner true si c'est un streamer, QUI refresh du token

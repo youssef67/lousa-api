@@ -20,7 +20,10 @@
     "typecheck": "tsc --noEmit",
     "users:generate": "node ace users:generate",
     "spaces:generate": "node ace spaces:generate",
-    "viewers:generate": "node ace viewers:generate"
+    "viewers:generate": "node ace viewers:generate",
+    "generate:all": "node ace users:generate 2 3 && node ace spaces:generate && node ace viewers:generate",
+    "setup:api": "node ace setup:api"
+
 
   },
   "imports": {

@@ -12,6 +12,12 @@ export default class extends BaseSchema {
         .references('id')
         .inTable('twitch_users')
         .onDelete('CASCADE')
+      table
+        .uuid('spotify_user_id')
+        .nullable()
+        .references('id')
+        .inTable('spotify_users')
+        .onDelete('CASCADE')
       table.string('name_space').nullable()
       table.integer('nb_viewer').notNullable().defaultTo(0)
       table.string('twitch_id').nullable()

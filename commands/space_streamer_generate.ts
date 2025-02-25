@@ -1,9 +1,6 @@
-import { args, BaseCommand } from '@adonisjs/core/ace'
+import { BaseCommand } from '@adonisjs/core/ace'
 import type { CommandOptions } from '@adonisjs/core/types/ace'
-import { UserRole } from '#types/user_role'
 import { randomUUID } from 'node:crypto'
-import { generateToken } from '#utils/authentication.utils'
-import { DateTime } from 'luxon'
 import { playlistNames } from '#data/playlists_names'
 import SpaceStreamer from '../app/models/space_streamer.js'
 import TwitchUser from '#models/twitch_user'
@@ -11,10 +8,10 @@ import Playlist from '#models/playlist'
 import User from '#models/user'
 import { ModelStatus } from '#types/model_status'
 import { TwitchUserFactory } from '../database/factories/twitch_user_factory.js'
-import { stat } from 'node:fs'
+import { SpotifyUserFactory } from '#database/factories/spotify_user_factory'
 
 export default class SpaceStreamerGenerate extends BaseCommand {
-  static commandName = 'space:generate'
+  static commandName = 'spaces:generate'
   static description = 'Generate a specified number of spaceStream'
 
   static options: CommandOptions = {
@@ -26,14 +23,16 @@ export default class SpaceStreamerGenerate extends BaseCommand {
       this.logger.info(`Generating spaceStreamer...`)
 
       await this.cleanOldData()
-      const twitchUsers = await this.createTwitchUsers()
+      const users = await this.getUsers()
 
-      if (!twitchUsers) {
+      if (!users) {
         this.logger.error('No twitchUsers created')
         return
       }
 
+      const twitchUsers = await this.createTwitchProfiles(users)
       await this.createPlaylists(twitchUsers)
+      await this.createSpotifyProfiles(users)
     } catch (error) {
       console.error(error) // Log the full error
       this.logger.error(`Failed to generate spaceStreamer: ${error.message}`)
@@ -85,10 +84,10 @@ export default class SpaceStreamerGenerate extends BaseCommand {
     await TwitchUser.query().whereIn('userId', Array.from(streamerUserIds)).delete()
   }
 
-  async createTwitchUsers() {
+  // Get users with email like 'streamer'
+  async getUsers() {
     const streamerUsers = await User.query().whereLike('email', '%streamer%')
 
-    // Get 15 random spaceStreamer
     const randomSpaceStreamers = await SpaceStreamer.query()
       .limit(streamerUsers.length)
       .orderByRaw('RANDOM()')
@@ -98,22 +97,33 @@ export default class SpaceStreamerGenerate extends BaseCommand {
       return
     }
 
-    const twitchUsersData = streamerUsers.map((user, index) => ({
+    return { users: streamerUsers, spaceStreamers: randomSpaceStreamers }
+  }
+
+  // Create twitch Profiles
+  async createTwitchProfiles({
+    users,
+    spaceStreamers,
+  }: {
+    users: User[]
+    spaceStreamers: SpaceStreamer[]
+  }) {
+    const twitchUsersData = users.map((user, index) => ({
       userId: user.id,
-      spaceStreamerId: randomSpaceStreamers[index].id,
+      spaceStreamerId: spaceStreamers[index].id,
       twitchId: randomUUID(),
-      twitchUserLogin: randomSpaceStreamers[index].twitchUserLogin,
+      twitchUserLogin: spaceStreamers[index].twitchUserLogin,
       emailTwitch: user.email,
-      twitchUserImgProfile: randomSpaceStreamers[index].spaceStreamerImg,
+      twitchUserImgProfile: spaceStreamers[index].spaceStreamerImg,
       status: ModelStatus.Enabled,
     }))
 
     const createdTwitchUsers = await TwitchUserFactory.merge(twitchUsersData).createMany(
-      streamerUsers.length
+      users.length
     )
 
     const updates = createdTwitchUsers.map((twitchUser, index) => ({
-      id: randomSpaceStreamers[index].id,
+      id: spaceStreamers[index].id,
       twitchUserId: twitchUser.id,
       nameSpace: twitchUser.twitchUserLogin,
     }))
@@ -130,11 +140,45 @@ export default class SpaceStreamerGenerate extends BaseCommand {
     return createdTwitchUsers
   }
 
+  // Create Spotify Profiles
+  async createSpotifyProfiles({
+    users,
+    spaceStreamers,
+  }: {
+    users: User[]
+    spaceStreamers: SpaceStreamer[]
+  }) {
+    const SpotifyUsersData = users.map((user, index) => ({
+      userId: user.id,
+      spaceStreamerId: spaceStreamers[index].id,
+      spotifyId: randomUUID(),
+      status: ModelStatus.Enabled,
+    }))
+
+    const createdSpotifyUsers = await SpotifyUserFactory.merge(SpotifyUsersData).createMany(
+      users.length
+    )
+
+    const updates = createdSpotifyUsers.map((spotifyUser, index) => ({
+      id: spaceStreamers[index].id,
+      spotifyUserId: spotifyUser.id,
+    }))
+
+    await Promise.all(
+      updates.map((update) =>
+        SpaceStreamer.query().where('id', update.id).update({
+          spotifyUserId: update.spotifyUserId,
+        })
+      )
+    )
+  }
+
+  // Create Playlist
   async createPlaylists(twitchUsers: TwitchUser[]) {
     const playlistFactory = await this.getSpacePlaylistFactory()
 
     for (const twitchUser of twitchUsers) {
-      const playlists = playlistNames.map((playlist, index) => ({
+      const playlists = playlistNames.map((playlist) => ({
         spaceStreamerId: twitchUser.spaceStreamerId,
         spotifyPlaylistId: randomUUID(),
         playlistName: playlist.playlistName,

@@ -7,6 +7,7 @@ import { DateTime } from 'luxon'
 import transmit from '@adonisjs/transmit/services/main'
 import User from '#models/user'
 import { ModelStatus } from '#types/model_status'
+import SpaceStreamer from '#models/space_streamer'
 
 const callbackTwitch = async ({ ally, response, request }: HttpContext) => {
   // TODO : supprimer ou marquer comme delete l'utilisateur twitch si la requete ne fonctionne pas
@@ -32,10 +33,18 @@ const callbackTwitch = async ({ ally, response, request }: HttpContext) => {
       throw ApiError.newError('ERROR_INVALID_DATA', 'ACCT-3')
     }
 
+    // TODO : a enlever en prod
+    const spaceStreamer = await SpaceStreamer.query()
+      .where('twitch_user_id', existingTwitchUser.id)
+      .first()
+
+    if (!spaceStreamer) throw ApiError.newError('ERROR_INVALID_DATA', 'ACCT-4')
+    // TODO : fin du TODO
+
     await db.transaction(async (trx) => {
-      existingTwitchUser.twitchId = '38824799' //<---- test line
+      existingTwitchUser.twitchId = spaceStreamer.twitchId //<---- test line
       // existingTwitchUser.twitchId = user.id <--- this is the original code
-      existingTwitchUser.twitchUserLogin = 'punkill' //<---- test line
+      existingTwitchUser.twitchUserLogin = spaceStreamer.twitchUserLogin //<---- test line
       // existingTwitchUser.twitchUserLogin = user.nickName <--- this is the original code
       existingTwitchUser.emailTwitch = user.email ?? ''
       existingTwitchUser.twitchUserImgProfile = user.avatarUrl ?? ''

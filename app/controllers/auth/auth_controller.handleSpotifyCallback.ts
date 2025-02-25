@@ -6,6 +6,7 @@ import env from '#start/env'
 import axios from 'axios'
 import SpotifyUser from '#models/spotify_user'
 import { DateTime } from 'luxon'
+import { ModelStatus } from '#types/model_status'
 
 const handleSpotifyCallback = async ({ request, response, currentDevice }: HttpContext) => {
   await currentDevice.load('user')
@@ -18,9 +19,9 @@ const handleSpotifyCallback = async ({ request, response, currentDevice }: HttpC
 
   const existingSpotifyUser = await SpotifyUser.findBy('userId', currentUser.id)
 
-  if (existingSpotifyUser) {
-    throw ApiError.newError('ERROR_INVALID_DATA', 'ACHS-2')
-  }
+  let spotifyUser
+  if (existingSpotifyUser) spotifyUser = existingSpotifyUser
+  else spotifyUser = new SpotifyUser()
 
   const params = new URLSearchParams({
     grant_type: 'authorization_code',
@@ -47,28 +48,24 @@ const handleSpotifyCallback = async ({ request, response, currentDevice }: HttpC
       },
     })
 
-    const newSpotifyUser = new SpotifyUser()
     await db.transaction(async (trx) => {
-      newSpotifyUser.userId = currentUser.id
-      newSpotifyUser.spotifyId = getProfile.data.id
-      newSpotifyUser.displayName = getProfile.data.display_name
-      newSpotifyUser.emailSpotify = getProfile.data.email
-      newSpotifyUser.externalUrl = getProfile.data.external_urls.spotify
-      newSpotifyUser.nbFollowers = getProfile.data.followers.total
-      newSpotifyUser.accessToken = tokenResponse.data.access_token
-      newSpotifyUser.refreshToken = tokenResponse.data.refresh_token
-      newSpotifyUser.tokenExpiresAt = DateTime.fromJSDate(new Date()).plus({ seconds: 3600 })
-      newSpotifyUser.scope = tokenResponse.data.scope
-      newSpotifyUser.useTransaction(trx)
-      await newSpotifyUser.save()
+      spotifyUser.userId = currentUser.id
+      spotifyUser.spotifyId = getProfile.data.id
+      spotifyUser.accessToken = tokenResponse.data.access_token
+      spotifyUser.refreshToken = tokenResponse.data.refresh_token
+      spotifyUser.tokenExpiresAt = DateTime.fromJSDate(new Date()).plus({ seconds: 3600 })
+      spotifyUser.scope = tokenResponse.data.scope
+      spotifyUser.status = ModelStatus.Enabled
+      spotifyUser.useTransaction(trx)
+      await spotifyUser.save()
 
-      currentUser.spotifyUserId = newSpotifyUser.id
+      currentUser.spotifyUserId = spotifyUser.id
       currentUser.useTransaction(trx)
       await currentUser.save()
     })
 
-    transmit.broadcast(`authentication/spotify/${newSpotifyUser.userId}`, {
-      spotifyUser: JSON.stringify(newSpotifyUser.serializeAsSession()),
+    transmit.broadcast(`authentication/spotify/${spotifyUser.userId}`, {
+      spotifyUser: JSON.stringify(spotifyUser.serializeAsSession()),
     })
   } catch (error) {
     return response.status(500).send(error)

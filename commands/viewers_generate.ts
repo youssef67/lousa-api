@@ -34,7 +34,9 @@ export default class ViewersGenerate extends BaseCommand {
     for (const viewer of viewers) {
       await viewer.related('favoritesPlaylists').detach()
       await viewer.related('favoritesSpaceStreamers').detach()
+    }
 
+    for (const viewer of viewers) {
       await User.query().where('id', viewer.id).update({
         playlistSelected: null,
       })
@@ -65,7 +67,6 @@ export default class ViewersGenerate extends BaseCommand {
       .sort(() => 0.5 - Math.random())
       .slice(0, defineNbSpaceStreamer)
 
-    // console.log(randomFavoriteStreamers)
     for (const viewer of viewers) {
       for (const spaceStreamer of randomFavoriteStreamers) {
         await viewer.related('favoritesSpaceStreamers').attach([spaceStreamer.id])

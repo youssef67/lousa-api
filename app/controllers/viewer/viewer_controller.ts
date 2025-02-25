@@ -11,6 +11,9 @@ const { default: getViewerData } = await import('./viewer_controller.getViewerDa
 const { default: setAndGetPlaylistSelected } = await import(
   './viewer_controller.setAndGetPlaylistSelected.js'
 )
+const { default: searchTrack } = await import('./viewer_controller.searchTrack.js')
+const { default: addTrack } = await import('./viewer_controller.addTrack.js')
+const { default: getPlaylistTracks } = await import('./viewer_controller.getPlaylistTracks.js')
 
 export default class ViewerController {
   async addFavoritePlaylist(context: HttpContext) {
@@ -35,5 +38,17 @@ export default class ViewerController {
 
   async setAndGetPlaylistSelected(context: HttpContext) {
     return await setAndGetPlaylistSelected(context)
+  }
+
+  async searchTrack(context: HttpContext) {
+    return await searchTrack(context)
+  }
+
+  async addTrack(context: HttpContext) {
+    return await addTrack(context)
+  }
+
+  async getPlaylistTracks(context: HttpContext) {
+    return await getPlaylistTracks(context)
   }
 }

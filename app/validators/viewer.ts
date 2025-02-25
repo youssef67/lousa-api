@@ -29,3 +29,17 @@ export const setAndGetPlaylistSelectedValidator = vine.compile(
     playlistId: vine.string().nullable(),
   })
 )
+
+export const addTrackValidator = vine.compile(
+  vine.object({
+    playlistId: vine.string().nullable(),
+    track: vine.object({
+      id: vine.string(),
+      name: vine.string(),
+      artists: vine.string(),
+      album: vine.string(),
+      cover: vine.string(),
+      url: vine.string(),
+    }),
+  })
+)

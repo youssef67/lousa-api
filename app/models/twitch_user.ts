@@ -99,7 +99,7 @@ export default class TwitchUser extends BaseModel {
 
       return tokenResponse.data as RefreshTokenResponse
     } catch (error) {
-      throw ApiError.newError('ERROR_INVALID_DATA', 'SMRT-1')
+      throw ApiError.newError('ERROR_INVALID_DATA', 'TMRT-1')
     }
   }
 }
