@@ -6,8 +6,6 @@ import { generateToken } from '#utils/authentication.utils'
 import { DateTime } from 'luxon'
 import { streamersList } from '#data/streamers_list'
 import User from '#models/user'
-import SpaceStreamer from '../app/models/space_streamer.js'
-import { ModelStatus } from '#types/model_status'
 
 export default class UsersGenerate extends BaseCommand {
   static commandName = 'users:generate'

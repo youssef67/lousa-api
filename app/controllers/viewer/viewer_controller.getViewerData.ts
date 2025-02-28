@@ -3,7 +3,7 @@ import ApiError from '#types/api_error'
 import User from '#models/user'
 import Playlist from '#models/playlist'
 
-const getViewerData = async ({ response, request, currentDevice }: HttpContext) => {
+const getViewerData = async ({ response, currentDevice }: HttpContext) => {
   await currentDevice.load('user')
   const currentUser = currentDevice.user
 
