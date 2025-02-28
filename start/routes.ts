@@ -70,6 +70,8 @@ router
             router.get('track/search', [ViewerController, 'searchTrack'])
             router.post('track/add', [ViewerController, 'addTrack'])
             router.get('playlist', [ViewerController, 'getPlaylistTracks'])
+            router.post('profile', [ViewerController, 'completeProfile'])
+            router.get('profile', [ViewerController, 'checkUserNameAvailability'])
           })
           .use(middleware.authApiToken())
       })

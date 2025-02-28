@@ -50,6 +50,7 @@ const addTrack = async ({ response, request, currentDevice }: HttpContext) => {
   await db.transaction(async (trx) => {
     playlistTrack.playlistId = playlist.id
     playlistTrack.trackId = track.id
+    playlistTrack.userId = currentUser.id
     playlistTrack.vote = 0
     playlistTrack.position = 0
     playlistTrack.status = TrackStatus.Active

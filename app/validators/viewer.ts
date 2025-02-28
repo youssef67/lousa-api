@@ -30,6 +30,12 @@ export const setAndGetPlaylistSelectedValidator = vine.compile(
   })
 )
 
+export const completeProfileValidator = vine.compile(
+  vine.object({
+    userName: vine.string(),
+  })
+)
+
 export const addTrackValidator = vine.compile(
   vine.object({
     playlistId: vine.string().nullable(),

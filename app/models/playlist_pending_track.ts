@@ -7,6 +7,9 @@ export default class PlaylistPendingTrack extends BaseModel {
   declare id: string
 
   @column()
+  declare userId: string
+
+  @column()
   declare playlistId: string
 
   @column()

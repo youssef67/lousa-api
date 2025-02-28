@@ -19,47 +19,50 @@ const getViewerData = async ({ response, request, currentDevice }: HttpContext) 
 
   const playlistSelected = await Playlist.findBy('id', currentUser.playlistSelected)
 
-  let viewerData = null
+  let isPlaylistSelected = null
   if (playlistSelected) {
     await playlistSelected.load('spaceStreamer')
 
-    viewerData = {
-      playlistSelected: {
-        id: playlistSelected.id,
-        playlistName: playlistSelected.playlistName,
-        spaceStreamerName: playlistSelected.spaceStreamer.nameSpace,
-        spaceStreamerImg: playlistSelected.spaceStreamer.spaceStreamerImg,
-      },
+    isPlaylistSelected = {
+      id: playlistSelected.id,
+      playlistName: playlistSelected.playlistName,
+      spaceStreamerName: playlistSelected.spaceStreamer.nameSpace,
+      spaceStreamerImg: playlistSelected.spaceStreamer.spaceStreamerImg,
     }
   }
 
-  console.log(viewerData)
-
-  const spaceStreamersFavorites = viewer.favoritesSpaceStreamers.map((spaceStreamer) => {
-    return {
-      id: spaceStreamer.id,
-      spaceStreamerName: spaceStreamer.nameSpace,
-      spaceStreamerImg: spaceStreamer.spaceStreamerImg,
-    }
-  })
+  const spaceStreamersFavorites = await Promise.all(
+    viewer.favoritesSpaceStreamers.map(async (spaceStreamer) => {
+      await spaceStreamer.load('playlists')
+      return {
+        id: spaceStreamer.id,
+        spaceStreamerName: spaceStreamer.nameSpace,
+        spaceStreamerImg: spaceStreamer.spaceStreamerImg,
+        nbPlaylists: spaceStreamer.playlists.length,
+      }
+    })
+  )
 
   const playlistsFavorites = await Promise.all(
     viewer.favoritesPlaylists.map(async (playlist) => {
       await playlist.load('spaceStreamer')
+      await playlist.load('playlistTracks')
 
       return {
         id: playlist.id,
         playlistName: playlist.playlistName,
         spaceStreamerName: playlist.spaceStreamer.nameSpace,
         spaceStreamerImg: playlist.spaceStreamer.spaceStreamerImg,
+        nbTracks: playlist.playlistTracks.length,
       }
     })
   )
 
   return response.ok({
     data: {
-      viewerData,
-      favorites: { spaceStreamers: spaceStreamersFavorites, playlists: playlistsFavorites },
+      isPlaylistSelected,
+      spaceStreamersFavorites,
+      playlistsFavorites,
     },
   })
 }

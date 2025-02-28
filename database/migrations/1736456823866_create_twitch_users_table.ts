@@ -11,7 +11,7 @@ export default class extends BaseSchema {
       table.string('twitch_id').nullable()
       table.string('twitch_user_login').nullable().unique()
       table.string('email_twitch').nullable().unique()
-      table.string('twitch_user_img_profile').nullable().unique()
+      table.string('twitch_user_img_profile').nullable()
       table.string('state').nullable()
       table.string('status').notNullable().defaultTo('enabled')
       table.text('access_token').nullable()

@@ -1,6 +1,6 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, hasOne, manyToMany } from '@adonisjs/lucid/orm'
-import type { HasOne, ManyToMany } from '@adonisjs/lucid/types/relations'
+import { BaseModel, column, hasOne, hasMany, manyToMany } from '@adonisjs/lucid/orm'
+import type { HasOne, HasMany, ManyToMany } from '@adonisjs/lucid/types/relations'
 import { UserRole } from '#types/user_role'
 import { ModelStatus } from '#types/model_status'
 import { UserSession } from '#interfaces/common_interface'
@@ -8,6 +8,8 @@ import SpotifyUser from './spotify_user.js'
 import Playlist from './playlist.js'
 import TwitchUser from './twitch_user.js'
 import SpaceStreamer from './space_streamer.js'
+import PlaylistTrack from './playlist_track.js'
+import PlaylistPendingTrack from './playlist_pending_track.js'
 
 export default class User extends BaseModel {
   @column({ isPrimary: true })
@@ -25,8 +27,8 @@ export default class User extends BaseModel {
   @column()
   declare lastName?: string
 
-  @column.dateTime()
-  declare dateOfBirth?: DateTime | null
+  @column()
+  declare userName?: string
 
   @column()
   declare role: UserRole
@@ -59,6 +61,12 @@ export default class User extends BaseModel {
   })
   declare twitchUser: HasOne<typeof TwitchUser>
 
+  @hasMany(() => PlaylistTrack)
+  declare playlistTracks: HasMany<typeof PlaylistTrack>
+
+  @hasMany(() => PlaylistPendingTrack)
+  declare playlistPendingTracks: HasMany<typeof PlaylistPendingTrack>
+
   @manyToMany(() => Playlist, {
     pivotTable: 'favorite_playlists_users',
   })
@@ -87,10 +95,10 @@ export default class User extends BaseModel {
   serializeAsSession(): UserSession {
     const result = {
       id: this.id,
+      userName: this.userName,
       firstName: this.firstName,
       lastName: this.lastName,
       email: this.email,
-      dateOfBirth: this.dateOfBirth,
       role: this.role,
       twitchUser: this.twitchUser?.serializeAsSession() || undefined,
       spotifyUser: this.spotifyUser?.serializeAsSession() || undefined,

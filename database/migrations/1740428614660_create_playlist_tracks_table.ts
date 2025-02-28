@@ -6,6 +6,7 @@ export default class extends BaseSchema {
   async up() {
     this.schema.createTable(this.tableName, (table) => {
       table.uuid('id').primary().defaultTo(this.db.rawQuery('uuid_generate_v4()').knexQuery)
+      table.uuid('user_id').nullable().references('id').inTable('users')
       table.uuid('playlist_id').nullable().references('id').inTable('playlists').onDelete('CASCADE')
       table.uuid('track_id').nullable().references('id').inTable('tracks').onDelete('CASCADE')
       table.integer('vote').defaultTo(0)

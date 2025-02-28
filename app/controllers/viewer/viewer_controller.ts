@@ -14,6 +14,10 @@ const { default: setAndGetPlaylistSelected } = await import(
 const { default: searchTrack } = await import('./viewer_controller.searchTrack.js')
 const { default: addTrack } = await import('./viewer_controller.addTrack.js')
 const { default: getPlaylistTracks } = await import('./viewer_controller.getPlaylistTracks.js')
+const { default: completeProfile } = await import('./viewer_controller.completeProfile.js')
+const { default: checkUserNameAvailability } = await import(
+  './viewer_controller.checkUserNameAvailability.js'
+)
 
 export default class ViewerController {
   async addFavoritePlaylist(context: HttpContext) {
@@ -50,5 +54,13 @@ export default class ViewerController {
 
   async getPlaylistTracks(context: HttpContext) {
     return await getPlaylistTracks(context)
+  }
+
+  async completeProfile(context: HttpContext) {
+    return await completeProfile(context)
+  }
+
+  async checkUserNameAvailability(context: HttpContext) {
+    return await checkUserNameAvailability(context)
   }
 }
