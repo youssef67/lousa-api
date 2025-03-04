@@ -7,7 +7,7 @@ import db from '@adonisjs/lucid/services/db'
 import SpotifyUser from '#models/spotify_user'
 
 const searchTrack = async ({ response, request, currentDevice }: HttpContext) => {
-  const trackName = request.input('trackName') // Pas besoin de `await`
+  const trackName = request.input('trackName')
   const playlistId = request.input('playlistId')
 
   await currentDevice.load('user')

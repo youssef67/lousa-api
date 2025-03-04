@@ -1,50 +1,38 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import { setAndGetPlaylistSelectedValidator } from '#validators/viewer'
-import ApiError from '#types/api_error'
-import loggerW from '#config/winston_logger'
 import db from '@adonisjs/lucid/services/db'
-import User from '#models/user'
 import Playlist from '#models/playlist'
 
 const setAndGetPlaylistSelected = async ({ response, request, currentDevice }: HttpContext) => {
-  const payload = await request.validateUsing(setAndGetPlaylistSelectedValidator)
+  const playlistId = request.input('playlistId')
   await currentDevice.load('user')
   const currentUser = currentDevice.user
 
-  if (payload.playlistId) {
-    const userHasPlaylistSelected = await User.query()
-      .where('playlistSelected', payload.playlistId)
-      .first()
+  // update playlistSelected
+  await db.transaction(async (trx) => {
+    currentUser.playlistSelected = playlistId
+    currentUser.useTransaction(trx)
+    await currentUser.save()
+  })
 
-    if (userHasPlaylistSelected?.playlistSelected !== payload.playlistId) {
-      try {
-        await db.transaction(async (trx) => {
-          currentUser.playlistSelected = payload.playlistId
-          currentUser.useTransaction(trx)
-          await currentUser.save()
-        })
-      } catch (error) {
-        loggerW.error(error)
-        throw ApiError.newError('ERROR_INVALID_DATA', 'SCSGP-1')
-      }
-    }
+  console.log('playlistId', playlistId)
+
+  const playlistSelected = await Playlist.query()
+    .where('id', playlistId)
+    .preload('playlistTracks')
+    .preload('spaceStreamer')
+    .first()
+
+  const playlistSelectedData = {
+    id: playlistSelected?.id,
+    playlistName: playlistSelected?.playlistName,
+    spaceStreamerName: playlistSelected?.spaceStreamer.nameSpace,
+    spaceStreamerImg: playlistSelected?.spaceStreamer.spaceStreamerImg,
+    nbTracks: playlistSelected?.playlistTracks.length,
   }
 
-  const playlistSelected = await Playlist.findBy('id', currentUser.playlistSelected)
+  console.log('playlistSelectedData', playlistSelectedData)
 
-  let playlistSelectedData = null
-  if (playlistSelected) {
-    await playlistSelected.load('spaceStreamer')
-
-    playlistSelectedData = {
-      id: playlistSelected.id,
-      playlistName: playlistSelected.playlistName,
-      spaceStreamerName: playlistSelected.spaceStreamer.nameSpace,
-      spaceStreamerImg: playlistSelected.spaceStreamer.spaceStreamerImg,
-    }
-  }
-
-  return response.ok({ data: playlistSelectedData })
+  return response.ok({ playlistSelectedData })
 }
 
 export default setAndGetPlaylistSelected

@@ -1,7 +1,6 @@
 import { BaseCommand } from '@adonisjs/core/ace'
 import type { CommandOptions } from '@adonisjs/core/types/ace'
 import { randomUUID } from 'node:crypto'
-import { playlistNames } from '#data/playlists_names'
 import SpaceStreamer from '../app/models/space_streamer.js'
 import TwitchUser from '#models/twitch_user'
 import Playlist from '#models/playlist'
@@ -30,18 +29,12 @@ export default class SpaceStreamerGenerate extends BaseCommand {
         return
       }
 
-      const twitchUsers = await this.createTwitchProfiles(users)
-      await this.createPlaylists(twitchUsers)
+      await this.createTwitchProfiles(users)
       await this.createSpotifyProfiles(users)
     } catch (error) {
-      console.error(error) // Log the full error
+      console.error(error)
       this.logger.error(`Failed to generate spaceStreamer: ${error.message}`)
     }
-  }
-
-  private async getSpacePlaylistFactory() {
-    const playlistFactoryModule = await import('../database/factories/playlist_factory.js')
-    return playlistFactoryModule.PlaylistFactory
   }
 
   async cleanOldData() {
@@ -171,21 +164,5 @@ export default class SpaceStreamerGenerate extends BaseCommand {
         })
       )
     )
-  }
-
-  // Create Playlist
-  async createPlaylists(twitchUsers: TwitchUser[]) {
-    const playlistFactory = await this.getSpacePlaylistFactory()
-
-    for (const twitchUser of twitchUsers) {
-      const playlists = playlistNames.map((playlist) => ({
-        spaceStreamerId: twitchUser.spaceStreamerId,
-        spotifyPlaylistId: randomUUID(),
-        playlistName: playlist.playlistName,
-        status: ModelStatus.Enabled,
-      }))
-
-      await Promise.all(playlists.map((playlist) => playlistFactory.merge(playlist).create()))
-    }
   }
 }

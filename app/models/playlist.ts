@@ -15,6 +15,9 @@ export default class Playlist extends BaseModel {
   declare spotifyPlaylistId: string
 
   @column()
+  declare spotifySnapShotId: string
+
+  @column()
   declare playlistName: string
 
   @column()

@@ -4,9 +4,9 @@ import { randomUUID } from 'node:crypto'
 import SpaceStreamer from '../app/models/space_streamer.js'
 import User from '#models/user'
 
-export default class ViewersGenerate extends BaseCommand {
-  static commandName = 'viewers:generate'
-  static description = 'Generate viewers'
+export default class FavoritesGenerate extends BaseCommand {
+  static commandName = 'favorites:generate'
+  static description = 'Generate fovorites'
 
   static options: CommandOptions = {
     startApp: true,
@@ -14,7 +14,7 @@ export default class ViewersGenerate extends BaseCommand {
 
   async run() {
     try {
-      this.logger.info(`Generating viewers...`)
+      this.logger.info(`Generating favorites...`)
 
       await this.cleanOldData()
       await this.createViewerProfile()
@@ -25,22 +25,16 @@ export default class ViewersGenerate extends BaseCommand {
   }
 
   async cleanOldData() {
-    const viewers = await User.query().whereNotNull('playlist_selected')
-
-    if (!viewers) {
-      throw new Error(`Users with playlist_selected at NULL are not found`)
-    }
+    const viewers = await User.all()
 
     for (const viewer of viewers) {
       await viewer.related('favoritesPlaylists').detach()
       await viewer.related('favoritesSpaceStreamers').detach()
     }
 
-    for (const viewer of viewers) {
-      await User.query().where('id', viewer.id).update({
-        playlistSelected: null,
-      })
-    }
+    await User.query().whereNotNull('playlist_selected').update({
+      playlistSelected: null,
+    })
   }
 
   async createViewerProfile() {
@@ -51,12 +45,6 @@ export default class ViewersGenerate extends BaseCommand {
 
     if (viewers.length === 0) {
       throw new Error(`Users not found`)
-    }
-
-    for (const viewer of viewers) {
-      await User.query().where('id', viewer.id).update({
-        playlistSelected: randomUUID(),
-      })
     }
 
     const spaceStreamers = await SpaceStreamer.query().whereNotNull('twitch_user_id')
@@ -78,6 +66,11 @@ export default class ViewersGenerate extends BaseCommand {
           .slice(0, defineNbPlaylists)
 
         for (const playlist of randomPlaylists) {
+          if (!viewer.playlistSelected) {
+            await User.query().where('id', viewer.id).update({
+              playlistSelected: playlist.id,
+            })
+          }
           await viewer.related('favoritesPlaylists').attach([playlist.id])
         }
       }

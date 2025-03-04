@@ -17,18 +17,15 @@ const getPlaylistTracks = async ({ response, request, currentDevice }: HttpConte
     .first()
 
   if (!playlist) {
-    throw ApiError.newError('ERROR_INVALID_DATA', 'VCAT-1')
+    throw ApiError.newError('ERROR_INVALID_DATA', 'VCGT-1')
   }
-
-  // await playlist.load('playlistTracks')
-  // await playlist.load('spaceStreamer')
 
   const playlistsTracks = await Promise.all(
     playlist.playlistTracks.map(async (playlistTrack: PlaylistTrack) => {
       const trackData = await Track.findBy('id', playlistTrack.trackId)
 
       if (!trackData) {
-        throw ApiError.newError('ERROR_INVALID_DATA', 'VCAT-2')
+        throw ApiError.newError('ERROR_INVALID_DATA', 'VCGT-2')
       }
 
       return { ...trackData.serializeTrack(), ...playlistTrack.serializePlaylistTrack() }

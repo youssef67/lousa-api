@@ -1,9 +1,8 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import ApiError from '#types/api_error'
 import User from '#models/user'
-import Playlist from '#models/playlist'
 
-const getViewerData = async ({ response, currentDevice }: HttpContext) => {
+const getFavorites = async ({ response, currentDevice }: HttpContext) => {
   await currentDevice.load('user')
   const currentUser = currentDevice.user
 
@@ -14,21 +13,7 @@ const getViewerData = async ({ response, currentDevice }: HttpContext) => {
     .first()
 
   if (!viewer) {
-    throw ApiError.newError('ERROR_INVALID_DATA', 'VCGV-1')
-  }
-
-  const playlistSelected = await Playlist.findBy('id', currentUser.playlistSelected)
-
-  let isPlaylistSelected = null
-  if (playlistSelected) {
-    await playlistSelected.load('spaceStreamer')
-
-    isPlaylistSelected = {
-      id: playlistSelected.id,
-      playlistName: playlistSelected.playlistName,
-      spaceStreamerName: playlistSelected.spaceStreamer.nameSpace,
-      spaceStreamerImg: playlistSelected.spaceStreamer.spaceStreamerImg,
-    }
+    throw ApiError.newError('ERROR_INVALID_DATA', 'VCGF-1')
   }
 
   const spaceStreamersFavorites = await Promise.all(
@@ -54,17 +39,15 @@ const getViewerData = async ({ response, currentDevice }: HttpContext) => {
         spaceStreamerName: playlist.spaceStreamer.nameSpace,
         spaceStreamerImg: playlist.spaceStreamer.spaceStreamerImg,
         nbTracks: playlist.playlistTracks.length,
+        isSelected: playlist.id === currentUser.playlistSelected,
       }
     })
   )
 
   return response.ok({
-    data: {
-      isPlaylistSelected,
-      spaceStreamersFavorites,
-      playlistsFavorites,
-    },
+    spaceStreamersFavorites,
+    playlistsFavorites,
   })
 }
 
-export default getViewerData
+export default getFavorites

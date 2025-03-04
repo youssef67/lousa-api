@@ -13,6 +13,7 @@ export default class extends BaseSchema {
         .inTable('space_streamers')
         .onDelete('CASCADE')
       table.string('spotify_playlist_id').nullable()
+      table.string('spotify_snap_shot_id').nullable()
       table.string('playlist_name').nullable()
       table.string('status').notNullable().defaultTo('enabled')
       table.timestamp('created_at')
