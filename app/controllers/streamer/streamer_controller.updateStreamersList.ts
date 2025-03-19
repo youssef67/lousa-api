@@ -79,7 +79,6 @@ const updateStreamersList = async ({ response, currentDevice }: HttpContext) => 
       for (const stream of filteredStreamWithThumbnails) {
         // if (stream !== undefined) {
         //   const existingStream = await TwitchStream.findBy('user_login', stream.broadcaster_login)
-
         //   if (!existingStream) {
         //     await TwitchStream.create(
         //       {

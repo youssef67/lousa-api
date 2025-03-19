@@ -2,7 +2,7 @@ import type { HttpContext } from '@adonisjs/core/http'
 import { ScopeSpotifyLogin } from '#types/spotify_scope'
 import env from '#start/env'
 
-const loginSpotifyStreamer = async ({ response, currentDevice }: HttpContext) => {
+const loginSpotify = async ({ response, currentDevice }: HttpContext) => {
   await currentDevice.load('user')
 
   const params = new URLSearchParams({
@@ -26,4 +26,4 @@ const loginSpotifyStreamer = async ({ response, currentDevice }: HttpContext) =>
   return response.ok(responseJson)
 }
 
-export default loginSpotifyStreamer
+export default loginSpotify

@@ -23,6 +23,7 @@ export default class extends BaseSchema {
       table.string('twitch_id').nullable()
       table.string('twitch_user_login').nullable()
       table.string('space_streamer_img').nullable()
+      table.uuid('last_playlist_id_selected').nullable()
       table.timestamp('created_at')
       table.timestamp('updated_at')
     })

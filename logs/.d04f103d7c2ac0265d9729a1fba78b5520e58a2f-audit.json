@@ -6,44 +6,29 @@
     "auditLog": "logs/.d04f103d7c2ac0265d9729a1fba78b5520e58a2f-audit.json",
     "files": [
         {
-            "date": 1740386930883,
-            "name": "logs/api.log.2025-02-24",
-            "hash": "e11132b303477f22feab92f91b548c62321ebb18f713255de0bf87244cdd4323"
+            "date": 1741872608631,
+            "name": "logs/api.log.2025-03-13",
+            "hash": "d5eb73b1dfb8abb31a2045b4f2c416bdb4df5d925287592957518e7c6d7d633e"
         },
         {
-            "date": 1740474135142,
-            "name": "logs/api.log.2025-02-25",
-            "hash": "fd732a466387b17c32cd48ae604c6ace24b70129f3bb44e8ba469b7dcf36f4ec"
+            "date": 1741943066349,
+            "name": "logs/api.log.2025-03-14",
+            "hash": "30a3b908581d0a7f439ea5dc8878f42d7057bd47102e2bb6e26c92fbdd0112b4"
         },
         {
-            "date": 1740585739672,
-            "name": "logs/api.log.2025-02-26",
-            "hash": "e7af2ae06d24e32707f93761a7b8d9ddffdc5dec9f1ae50a30e68554ae59d9e6"
+            "date": 1742242134708,
+            "name": "logs/api.log.2025-03-17",
+            "hash": "1a3e8b1265fba440ee0cab3784375d420a18bca7688887b0e9a94080cb8b17ee"
         },
         {
-            "date": 1740687742415,
-            "name": "logs/api.log.2025-02-27",
-            "hash": "d9c0092b7a3a89c74eb8d4f191fc8c1ba4a15af9f7fd6a5ae41d5dcbfae8a520"
+            "date": 1742285100221,
+            "name": "logs/api.log.2025-03-18",
+            "hash": "c7dc7777da073e4a519c55ef581ef00e32cdf64b7104512e95a19e3b0b321ad0"
         },
         {
-            "date": 1740775418752,
-            "name": "logs/api.log.2025-02-28",
-            "hash": "6b8e169a1aea7ce2ea3d324d1c4b8b85ed46f059932b1abbb18e64415be255d9"
-        },
-        {
-            "date": 1740923188862,
-            "name": "logs/api.log.2025-03-02",
-            "hash": "21ee7dff722c603582e4046e0848b19974fc86163b69c9cd2aa0b3d3ddedc51d"
-        },
-        {
-            "date": 1740990073647,
-            "name": "logs/api.log.2025-03-03",
-            "hash": "41efdaeef751c49ec05db8a8be02de20fd2cdd9dea746535c7fac11b531fa814"
-        },
-        {
-            "date": 1741077038202,
-            "name": "logs/api.log.2025-03-04",
-            "hash": "6294921447dcf3ee52b699332a642d6739a436017ae6a6bef4d946140946e738"
+            "date": 1742371754690,
+            "name": "logs/api.log.2025-03-19",
+            "hash": "818371d21a14c8ca9c6a109c7033dab164b3f1fb5e0a180d4ca2e5637b626a32"
         }
     ],
     "hashType": "sha256"

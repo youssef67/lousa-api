@@ -4,10 +4,12 @@ const { default: signupEmail } = await import('./auth_controller.signupEmail.js'
 const { default: signupEmailConfirm } = await import('./auth_controller.signupEmailConfirm.js')
 const { default: loginEmail } = await import('./auth_controller.loginEmail.js')
 const { default: loginEmailConfirm } = await import('./auth_controller.loginEmailConfirm.js')
-const { default: loginSpotifyStreamer } = await import('./auth_controller.loginSpotifyStreamer.js')
+const { default: loginSpotify } = await import('./auth_controller.loginSpotify.js')
 const { default: handleSpotifyCallback } = await import(
   './auth_controller.handleSpotifyCallback.js'
 )
+const { default: loginTwitch } = await import('./auth_controller.loginTwitch.js')
+const { default: handleTwitchCallback } = await import('./auth_controller.handleTwitchCallback.js')
 
 export default class AuthController {
   async signupAnonymous(context: HttpContext) {
@@ -30,11 +32,19 @@ export default class AuthController {
     return await loginEmailConfirm(context)
   }
 
-  async loginSpotifyStreamer(context: HttpContext) {
-    return await loginSpotifyStreamer(context)
+  async loginSpotify(context: HttpContext) {
+    return await loginSpotify(context)
   }
 
   async handleSpotifyCallback(context: HttpContext) {
     return await handleSpotifyCallback(context)
+  }
+
+  async loginTwitch(context: HttpContext) {
+    return await loginTwitch(context)
+  }
+
+  async handleTwitchCallback(context: HttpContext) {
+    return await handleTwitchCallback(context)
   }
 }

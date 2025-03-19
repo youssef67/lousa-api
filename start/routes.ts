@@ -14,7 +14,7 @@ import { middleware } from './kernel.js'
 const AuthController = () => import('#controllers/auth/auth_controller')
 const SessionController = () => import('#controllers/session/session_controller')
 const ViewerController = () => import('#controllers/viewer/viewer_controller')
-const SpotifyController = () => import('#controllers/spotify/spotify_controller')
+const StreamerController = () => import('#controllers/streamer/streamer_controller')
 const TwitchController = () => import('#controllers/twitch/twitch_controller')
 
 router
@@ -31,7 +31,8 @@ router
             router.post('signup/email/confirm', [AuthController, 'signupEmailConfirm'])
             router.post('login/email', [AuthController, 'loginEmail'])
             router.post('login/email/confirm', [AuthController, 'loginEmailConfirm'])
-            router.get('login/spotify/streamer', [AuthController, 'loginSpotifyStreamer'])
+            router.post('login/spotify', [AuthController, 'loginSpotify'])
+            router.post('login/twitch', [AuthController, 'loginTwitch'])
           })
           .use(middleware.authApiToken())
       })
@@ -46,11 +47,7 @@ router
             router.get('user', [SessionController, 'getUserSession'])
             router.put('user', [SessionController, 'editUser'])
             router.post('user/delete', [SessionController, 'deleteUser'])
-            router.get('validate/streamer/profile', [SessionController, 'checkIfStreamer'])
-            router.post('streamer/space', [SessionController, 'getSpaceStreamerData'])
             router.get('streamers', [SessionController, 'getStreamersList'])
-            router.post('streamer/profile/delete', [SessionController, 'deleteStreamerProfile'])
-            router.post('playlist/selected', [SessionController, 'setAndGetPlaylistSelected'])
           })
           .use(middleware.authApiToken())
       })
@@ -72,6 +69,7 @@ router
             router.get('playlist', [ViewerController, 'getPlaylistTracks'])
             router.post('profile', [ViewerController, 'completeProfile'])
             router.get('profile', [ViewerController, 'checkUserNameAvailability'])
+            router.get('streamer', [ViewerController, 'getStreamerProfile'])
           })
           .use(middleware.authApiToken())
       })
@@ -82,13 +80,19 @@ router
       .group(() => {
         router
           .group(() => {
-            router.post('playlist', [SpotifyController, 'createPlaylist'])
-            router.post('playlist/delete', [SpotifyController, 'deletePlaylist'])
+            router.post('profile/validation', [StreamerController, 'checkIfStreamer'])
+            router.post('profile/delete', [StreamerController, 'deleteStreamerProfile'])
+            router.post('playlist/selected', [StreamerController, 'setAndGetPlaylistSelected'])
+            router.get('', [StreamerController, 'getStreamerProfile'])
+            router.post('playlist', [StreamerController, 'createPlaylist'])
+            router.delete('playlist', [StreamerController, 'deletePlaylist'])
+            router.post('add', [StreamerController, 'addStreamer'])
+            router.post('list/update', [StreamerController, 'updateStreamersList'])
           })
           .use(middleware.authApiToken())
       })
       .use(middleware.authApiKey())
-      .prefix('spotify')
+      .prefix('streamer')
 
     // TWITCH
     router
@@ -107,7 +111,7 @@ router
     // Authentication API
     router
       .group(() => {
-        router.get('twitch/callback', [TwitchController, 'callbackTwitch'])
+        router.get('twitch/callback', [AuthController, 'handleTwitchCallback'])
         router.get('spotify/callback', [AuthController, 'handleSpotifyCallback'])
       })
       .prefix('auth')

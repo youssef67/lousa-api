@@ -8,9 +8,9 @@ import transmit from '@adonisjs/transmit/services/main'
 import User from '#models/user'
 import { ModelStatus } from '#types/model_status'
 import SpaceStreamer from '#models/space_streamer'
-import { randomUUID } from 'crypto'
+import { randomUUID } from 'node:crypto'
 
-const callbackTwitch = async ({ ally, response, request }: HttpContext) => {
+const handleTwitchCallback = async ({ ally, response, request }: HttpContext) => {
   // TODO : supprimer ou marquer comme delete l'utilisateur twitch si la requete ne fonctionne pas
   try {
     const twitch = ally.use('twitch') as TwitchDriver
@@ -91,4 +91,4 @@ const callbackTwitch = async ({ ally, response, request }: HttpContext) => {
   }
 }
 
-export default callbackTwitch
+export default handleTwitchCallback

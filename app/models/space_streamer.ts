@@ -31,6 +31,9 @@ export default class SpaceStreamer extends BaseModel {
   @column()
   declare spaceStreamerImg: string
 
+  @column()
+  declare lastPlaylistIdSelected: string
+
   @belongsTo(() => TwitchUser, {
     foreignKey: 'twitchUserId',
   })
@@ -57,6 +60,7 @@ export default class SpaceStreamer extends BaseModel {
       twitchUserId: this.twitchUserId,
       twitchUserLogin: this.twitchUserLogin,
       spaceStreamerImg: this.spaceStreamerImg,
+      lastPlaylistIdSelected: this.lastPlaylistIdSelected,
     } as StreamerSpaceSession
     return result
   }

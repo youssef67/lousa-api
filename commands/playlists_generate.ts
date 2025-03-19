@@ -36,7 +36,7 @@ export default class PlaylistsGenerate extends BaseCommand {
       await this.spaceStreamerGenerate('streamer-1')
       await this.spaceStreamerGenerate('streamer-2')
     } catch (error) {
-      console.error(error) // Log the full error
+      console.error(error)
       this.logger.error(`Failed to generate access: ${error.message}`)
     }
   }
@@ -104,6 +104,8 @@ export default class PlaylistsGenerate extends BaseCommand {
       const genre = playlist.playlistName.split('-')[0]
       const selectedMusics = await this.selectRandomMusics(genre, nbMusics)
 
+      let position = 0
+      let score = nbMusics * 10 // Le score initial le plus élevé
       const trackPromises = selectedMusics.map(async (music) => {
         const foundTrack = await this.searchTrackOnSpotify(user.spotifyUser.accessToken, music)
         if (!foundTrack) return
@@ -118,28 +120,38 @@ export default class PlaylistsGenerate extends BaseCommand {
           playlist.spotifySnapShotId = newSnapshotId
           const randomUserId = usersIdsArray[Math.floor(Math.random() * usersIdsArray.length)]
 
+          const existingTrack = await Track.query().where('spotify_track_id', foundTrack.id).first()
+
+          let track: Track
           await db.transaction(async (trx) => {
-            const track = new Track()
-            track.spotifyTrackId = foundTrack.id ?? 'UNKNOWN_ID'
-            track.trackName = foundTrack.name ?? 'Unknown Track'
-            track.artistName = foundTrack.artists?.[0]?.name ?? 'Unknown Artist'
-            track.album = foundTrack.album?.name ?? 'Unknown Album'
-            track.cover = foundTrack.album?.images?.[0]?.url ?? ''
-            track.url = foundTrack.external_urls?.spotify ?? ''
-            track.submittedBy = randomUserId
-            track.useTransaction(trx)
-            await track.save()
+            if (!existingTrack) {
+              track = new Track()
+              track.spotifyTrackId = foundTrack.id ?? 'UNKNOWN_ID'
+              track.trackName = foundTrack.name ?? 'Unknown Track'
+              track.artistName = foundTrack.artists?.[0]?.name ?? 'Unknown Artist'
+              track.album = foundTrack.album?.name ?? 'Unknown Album'
+              track.cover = foundTrack.album?.images?.[0]?.url ?? ''
+              track.url = foundTrack.external_urls?.spotify ?? ''
+              track.submittedBy = randomUserId
+              track.useTransaction(trx)
+              await track.save()
+            } else {
+              track = existingTrack
+            }
 
             const playlistTrack = new PlaylistTrack()
-            playlistTrack.playlistId = playlist.id!
-            playlistTrack.trackId = track.id!
-            playlistTrack.userId = randomUserId!
-            playlistTrack.vote = 0
-            playlistTrack.position = 0
+            playlistTrack.playlistId = playlist.id
+            playlistTrack.trackId = track.id
+            playlistTrack.userId = randomUserId
+            playlistTrack.vote = score
+            playlistTrack.position = position
             playlistTrack.status = TrackStatus.Active
             playlistTrack.useTransaction(trx)
             await playlistTrack.save()
           })
+          // Mise à jour de la position et du score pour la prochaine musique
+          position++
+          score -= 10
         } catch (error) {
           this.logger.error(`Failed to process track ${music.title}: ${error.message}`)
         }
