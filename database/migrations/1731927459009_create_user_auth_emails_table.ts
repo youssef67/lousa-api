@@ -26,6 +26,8 @@ export default class extends BaseSchema {
       table.timestamp('created_at').notNullable()
       table.timestamp('updated_at').notNullable()
       table.integer('t_version').notNullable().defaultTo(1)
+      table.index(['user_id'], 'auth_emails_user_id_index')
+      table.index(['email'], 'auth_emails_email_index')
     })
   }
 

@@ -26,6 +26,7 @@ export default class extends BaseSchema {
       table.uuid('last_playlist_id_selected').nullable()
       table.timestamp('created_at')
       table.timestamp('updated_at')
+      table.index(['user_id'], 'space_streamers_user_id_index')
     })
   }
 

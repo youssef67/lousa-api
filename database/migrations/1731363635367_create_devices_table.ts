@@ -22,6 +22,7 @@ export default class extends BaseSchema {
       table.string('status').notNullable().defaultTo('enabled')
       table.timestamp('created_at').notNullable()
       table.timestamp('updated_at').notNullable()
+      table.index(['user_id'], 'devices_user_id_index')
     })
   }
 

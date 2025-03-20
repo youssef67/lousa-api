@@ -20,6 +20,7 @@ export default class extends BaseSchema {
       table.timestamp('token_expires_at').nullable()
       table.timestamp('created_at')
       table.timestamp('updated_at')
+      table.index(['twitch_id'], 'twitch_users_twitch_id_index')
     })
   }
 

@@ -11,6 +11,8 @@ export default class extends BaseSchema {
       table.unique(['user_id', 'playlist_id'])
       table.timestamp('created_at')
       table.timestamp('updated_at')
+      table.index(['user_id', 'playlist_id'], 'favorite_playlists_index')
+      table.unique(['user_id', 'playlist_id'])
     })
   }
 

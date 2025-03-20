@@ -15,6 +15,8 @@ export default class extends BaseSchema {
       table.unique(['user_id', 'space_streamer_id'])
       table.timestamp('created_at')
       table.timestamp('updated_at')
+      table.index(['user_id', 'streamer_id'], 'favorite_streamers_index')
+      table.unique(['user_id', 'streamer_id'])
     })
   }
 

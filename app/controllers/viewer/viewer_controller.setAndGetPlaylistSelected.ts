@@ -14,8 +14,6 @@ const setAndGetPlaylistSelected = async ({ response, request, currentDevice }: H
     await currentUser.save()
   })
 
-  console.log('playlistId', playlistId)
-
   const playlistSelected = await Playlist.query()
     .where('id', playlistId)
     .preload('playlistTracks')
@@ -29,8 +27,6 @@ const setAndGetPlaylistSelected = async ({ response, request, currentDevice }: H
     spaceStreamerImg: playlistSelected?.spaceStreamer.spaceStreamerImg,
     nbTracks: playlistSelected?.playlistTracks.length,
   }
-
-  console.log('playlistSelectedData', playlistSelectedData)
 
   return response.ok({ playlistSelectedData })
 }

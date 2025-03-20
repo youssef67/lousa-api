@@ -17,6 +17,7 @@ export default class extends BaseSchema {
       table.string('status').notNullable().defaultTo('enabled')
       table.timestamp('created_at')
       table.timestamp('updated_at')
+      table.index(['spotify_id'], 'spotify_users_spotify_id_index')
     })
   }
 
