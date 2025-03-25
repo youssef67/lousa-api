@@ -7,12 +7,6 @@ const { default: deleteFavoriteStreamer } = await import(
   './viewer_controller.deleteFavoriteStreamer.js'
 )
 const { default: addFavoriteStreamer } = await import('./viewer_controller.addFavoriteStreamer.js')
-const { default: setAndGetPlaylistSelected } = await import(
-  './viewer_controller.setAndGetPlaylistSelected.js'
-)
-const { default: searchTrack } = await import('./viewer_controller.searchTrack.js')
-const { default: addTrack } = await import('./viewer_controller.addTrack.js')
-const { default: getPlaylistTracks } = await import('./viewer_controller.getPlaylistTracks.js')
 const { default: completeProfile } = await import('./viewer_controller.completeProfile.js')
 const { default: checkUserNameAvailability } = await import(
   './viewer_controller.checkUserNameAvailability.js'
@@ -35,22 +29,6 @@ export default class ViewerController {
 
   async addFavoriteStreamer(context: HttpContext) {
     return await addFavoriteStreamer(context)
-  }
-
-  async setAndGetPlaylistSelected(context: HttpContext) {
-    return await setAndGetPlaylistSelected(context)
-  }
-
-  async searchTrack(context: HttpContext) {
-    return await searchTrack(context)
-  }
-
-  async addTrack(context: HttpContext) {
-    return await addTrack(context)
-  }
-
-  async getPlaylistTracks(context: HttpContext) {
-    return await getPlaylistTracks(context)
   }
 
   async completeProfile(context: HttpContext) {

@@ -38,14 +38,29 @@ export const completeProfileValidator = vine.compile(
 
 export const addTrackValidator = vine.compile(
   vine.object({
-    playlistId: vine.string().nullable(),
+    playlistId: vine.string(),
+    score: vine.number().optional(),
     track: vine.object({
-      id: vine.string(),
-      name: vine.string(),
-      artists: vine.string(),
+      trackId: vine.string().optional(),
+      spotifyTrackId: vine.string().optional(),
+      trackName: vine.string(),
+      artistName: vine.string(),
       album: vine.string(),
       cover: vine.string(),
       url: vine.string(),
     }),
   })
 )
+
+// id: string
+//   spotifyTrackId: string
+//   trackId: string
+//   trackName: string
+//   artistName: string
+//   album: string
+//   cover: string
+//   url: string
+//   position: number
+//   votes: number
+//   score: number
+//   user: UserSession

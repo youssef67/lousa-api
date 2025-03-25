@@ -1,19 +1,25 @@
 import { BaseSchema } from '@adonisjs/lucid/schema'
 
 export default class extends BaseSchema {
-  protected tableName = 'playlist_pending_tracks'
+  protected tableName = 'tracks_versuses'
 
   async up() {
     this.schema.createTable(this.tableName, (table) => {
       table.uuid('id').primary().defaultTo(this.db.rawQuery('uuid_generate_v4()').knexQuery)
-      table.uuid('user_id').nullable().references('id').inTable('users')
       table.uuid('playlist_id').nullable().references('id').inTable('playlists').onDelete('CASCADE')
-      table.uuid('track_id').nullable().references('id').inTable('tracks').onDelete('CASCADE')
-      table.string('status').notNullable().defaultTo('on_hold')
+      table.uuid('first_track_id').nullable().references('id').inTable('tracks').onDelete('CASCADE')
+      table
+        .uuid('second_track_id')
+        .nullable()
+        .references('id')
+        .inTable('tracks')
+        .onDelete('CASCADE')
+      table.integer('first_track_votes').notNullable().defaultTo(0)
+      table.integer('second_track_votes').notNullable().defaultTo(0)
+      table.timestamp('closing_date')
+      table.uuid('winner').nullable()
       table.timestamp('created_at')
       table.timestamp('updated_at')
-      table.index(['playlist_id', 'track_id'], 'pending_tracks_playlist_track_index')
-      table.unique(['playlist_id', 'track_id'])
     })
   }
 

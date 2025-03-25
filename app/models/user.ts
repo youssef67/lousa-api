@@ -3,7 +3,7 @@ import { BaseModel, column, hasOne, hasMany, manyToMany } from '@adonisjs/lucid/
 import type { HasOne, HasMany, ManyToMany } from '@adonisjs/lucid/types/relations'
 import { UserRole } from '#types/user_role'
 import { ModelStatus } from '#types/model_status'
-import { UserSession } from '#interfaces/common_interface'
+import { UserSession, UserNameAndId } from '#interfaces/common_interface'
 import SpotifyUser from './spotify_user.js'
 import Playlist from './playlist.js'
 import TwitchUser from './twitch_user.js'
@@ -103,6 +103,14 @@ export default class User extends BaseModel {
       twitchUser: this.twitchUser?.serializeAsSession() || undefined,
       spotifyUser: this.spotifyUser?.serializeAsSession() || undefined,
     } as UserSession
+    return result
+  }
+
+  getUserNameAndId(): UserNameAndId {
+    const result = {
+      id: this.id,
+      userName: this.userName,
+    } as UserNameAndId
     return result
   }
 }

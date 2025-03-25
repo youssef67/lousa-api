@@ -55,9 +55,9 @@ const searchTrack = async ({ response, request, currentDevice }: HttpContext) =>
     })
 
     const foundTracks = searchTrackRequest.data.tracks.items.map((track: any) => ({
-      id: track.id,
-      name: track.name,
-      artists: track.artists.map((artist: any) => artist.name).join(', '),
+      spotifyTrackId: track.id,
+      trackName: track.name,
+      artistName: track.artists.map((artist: any) => artist.name).join(', '),
       album: track.album.name,
       cover: track.album.images[0]?.url,
       url: track.external_urls.spotify,

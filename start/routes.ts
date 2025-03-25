@@ -15,7 +15,7 @@ const AuthController = () => import('#controllers/auth/auth_controller')
 const SessionController = () => import('#controllers/session/session_controller')
 const ViewerController = () => import('#controllers/viewer/viewer_controller')
 const StreamerController = () => import('#controllers/streamer/streamer_controller')
-const TwitchController = () => import('#controllers/twitch/twitch_controller')
+const PlaylistController = () => import('#controllers/playlist/playlist_controller')
 
 router
   .group(() => {
@@ -63,10 +63,6 @@ router
             router.post('favorite/streamer/add', [ViewerController, 'addFavoriteStreamer'])
             router.post('favorite/streamer/delete', [ViewerController, 'deleteFavoriteStreamer'])
             router.get('favorites', [ViewerController, 'getFavorites'])
-            router.get('playlist/select', [ViewerController, 'setAndGetPlaylistSelected'])
-            router.get('track/search', [ViewerController, 'searchTrack'])
-            router.post('track/add', [ViewerController, 'addTrack'])
-            router.get('playlist', [ViewerController, 'getPlaylistTracks'])
             router.post('profile', [ViewerController, 'completeProfile'])
             router.get('profile', [ViewerController, 'checkUserNameAvailability'])
             router.get('streamer', [ViewerController, 'getStreamerProfile'])
@@ -94,20 +90,20 @@ router
       .use(middleware.authApiKey())
       .prefix('streamer')
 
-    // TWITCH
     router
       .group(() => {
         router
           .group(() => {
-            router.get('login', [TwitchController, 'loginTwitch'])
-            router.get('update/list/streamers', [TwitchController, 'updateStreamersList'])
-            router.post('streamer', [TwitchController, 'addStreamer'])
+            router.get('track/search', [PlaylistController, 'searchTrack'])
+            router.post('track/add', [PlaylistController, 'addTrack'])
+            router.get('refresh/versus', [PlaylistController, 'refreshVersus'])
+            router.post('pending/track/add', [PlaylistController, 'addPendingTrack'])
+            router.get('', [PlaylistController, 'getPlaylistTracks'])
           })
           .use(middleware.authApiToken())
       })
       .use(middleware.authApiKey())
-      .prefix('twitch')
-
+      .prefix('playlist')
     // Authentication API
     router
       .group(() => {

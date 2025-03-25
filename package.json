@@ -20,13 +20,11 @@
     "typecheck": "tsc --noEmit",
     "users:generate": "node ace users:generate",
     "spaces:generate": "node ace spaces:generate",
-    "generate:all": "node ace users:generate 2 3 && node ace spaces:generate",
+    "generate:all": "node ace users:generate 20 3 && node ace spaces:generate",
     "setup:api": "node ace setup:api",
     "playlists:generate": "node ace playlists:generate",
     "favorites:generate": "node ace favorites:generate",
-    "generate:playlists": "node ace playlists:generate && node ace favorites:generate"
-  
-
+    "delete:last": "node ace delete:last"
 
   },
   "imports": {

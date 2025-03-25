@@ -2,7 +2,7 @@ import { DateTime } from 'luxon'
 import { BaseModel, column, belongsTo } from '@adonisjs/lucid/orm'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import { TrackStatus } from '#types/track_status'
-import { PlaylistTrackSession } from '#interfaces/viewer_interface'
+import { PlaylistTrackSerialized } from '#interfaces/playlist_interface'
 import User from './user.js'
 
 export default class PlaylistTrack extends BaseModel {
@@ -19,10 +19,16 @@ export default class PlaylistTrack extends BaseModel {
   declare trackId: string
 
   @column()
+  declare score: number
+
+  @column()
   declare vote: number
 
   @column()
-  declare position: number
+  declare isRanked: boolean
+
+  @column()
+  declare position: number | null
 
   @column()
   declare status: TrackStatus
@@ -46,14 +52,15 @@ export default class PlaylistTrack extends BaseModel {
     await playlistTrack.load('user')
   }
 
-  serializePlaylistTrack(): PlaylistTrackSession {
+  serializePlaylistTrack(): PlaylistTrackSerialized {
     const result = {
       id: this.id,
       trackId: this.trackId,
       vote: this.vote,
       position: this.position,
+      score: this.score,
       user: this.user.serializeAsSession() || undefined,
-    } as PlaylistTrackSession
+    } as PlaylistTrackSerialized
     return result
   }
 }

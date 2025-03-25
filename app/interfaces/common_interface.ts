@@ -10,6 +10,11 @@ export interface UserSession {
   spotifyUser?: SpotifyUserSession
 }
 
+export interface UserNameAndId {
+  id: string
+  userName?: string
+}
+
 export interface SpotifyUserSession {
   id: string
   spotifyId: string

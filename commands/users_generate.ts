@@ -1,5 +1,6 @@
 import { args, BaseCommand } from '@adonisjs/core/ace'
 import type { CommandOptions } from '@adonisjs/core/types/ace'
+import { usernames } from '#data/username_list'
 import { UserRole } from '#types/user_role'
 import { randomUUID } from 'node:crypto'
 import { generateToken } from '#utils/authentication.utils'
@@ -154,23 +155,38 @@ export default class UsersGenerate extends BaseCommand {
     const usersFactory = await this.getUserFactory()
     const deviceFactory = await this.getDeviceFactory()
 
-    let totalUsers = Number.parseInt(this.numberViewer!) + Number.parseInt(this.numberStreamer!)
+    const totalUsers = Number.parseInt(this.numberViewer!) + Number.parseInt(this.numberStreamer!)
+    const numberStreamers = Number.parseInt(this.numberStreamer!)
     let streamerCount = 0
-    let UsersArray: User[] = []
+    const UsersArray: User[] = []
+    const usernamesUsed = new Set<string | null>()
 
     for (let i = 1; i <= totalUsers; i++) {
       const userId = randomUUID()
-      let email: string = `viewer-${i}@lousa.com`
+      const isStreamer = streamerCount < numberStreamers
 
-      if (streamerCount < Number.parseInt(this.numberStreamer!)) {
-        email = `streamer-${i}@lousa.com`
-        streamerCount++
-      }
+      const email = isStreamer
+        ? `streamer-${streamerCount + 1}@lousa.com`
+        : `viewer-${i - streamerCount}@lousa.com`
+
+      let randomUser: string | null
+      let attempts = 0
+      do {
+        randomUser =
+          email === 'viewer-4@lousa.com'
+            ? null
+            : usernames[Math.floor(Math.random() * usernames.length)]
+        attempts++
+        if (attempts > 100) throw new Error('Impossible de trouver un username unique')
+      } while (usernamesUsed.has(randomUser))
+
+      usernamesUsed.add(randomUser)
 
       const user = await usersFactory
         .merge({
           id: userId,
-          email: email,
+          email,
+          userName: randomUser!,
           role: UserRole.User,
         })
         .create()
@@ -180,11 +196,11 @@ export default class UsersGenerate extends BaseCommand {
       const accessToken = generateToken(userId)
       const refreshToken = generateToken(userId)
 
-      deviceFactory
+      await deviceFactory
         .merge({
-          accessToken: accessToken,
-          refreshToken: refreshToken,
-          userId: userId,
+          accessToken,
+          refreshToken,
+          userId,
           locale: 'fr-FR',
           language: 'fr',
           timezone: 'Europe/Paris',
@@ -194,9 +210,13 @@ export default class UsersGenerate extends BaseCommand {
             'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36',
           appVersion: '1.0.0',
           lastIp: '127.0.0.1',
-          lastConnectionAt: DateTime.fromJSDate(new Date()),
+          lastConnectionAt: DateTime.now(),
         })
         .create()
+
+      if (isStreamer) {
+        streamerCount++
+      }
     }
 
     return UsersArray

@@ -13,10 +13,9 @@ export default class extends BaseSchema {
       table.string('cover').notNullable()
       table.string('url').notNullable()
       table.integer('duration').nullable()
-      table.uuid('submitted_by').notNullable()
       table.timestamp('created_at')
       table.timestamp('updated_at')
-      table.index(['title', 'artist'], 'tracks_title_artist_index')
+      table.index(['track_name', 'artist_name'], 'tracks_title_artist_index')
     })
   }
 
