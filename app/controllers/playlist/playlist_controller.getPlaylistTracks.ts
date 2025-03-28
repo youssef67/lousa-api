@@ -2,11 +2,10 @@ import type { HttpContext } from '@adonisjs/core/http'
 import ApiError from '#types/api_error'
 import Playlist from '#models/playlist'
 import db from '@adonisjs/lucid/services/db'
-
 import PlaylistTrack from '#models/playlist_track'
 import Track from '#models/track'
-import { TrackStatus } from '#types/track_status'
-import PlaylistPendingTrack from '#models/playlist_pending_track'
+import VersusService from '#services/versus_service'
+import { BroadcasterVersus } from '#interfaces/playlist_interface'
 
 const getPlaylistTracks = async ({ response, request, currentDevice }: HttpContext) => {
   const playlistId = request.input('playlistId')
@@ -19,12 +18,6 @@ const getPlaylistTracks = async ({ response, request, currentDevice }: HttpConte
     .preload('playlistTracks', (playlistTrackQuery) => {
       playlistTrackQuery.where('is_ranked', true).preload('user').orderBy('position', 'asc')
     })
-    .preload('playlistPendingTracks', (playlistPendingTrackQuery) => {
-      playlistPendingTrackQuery
-        .where('status', TrackStatus.OnHold)
-        .preload('user')
-        .orderBy('createdAt', 'asc')
-    })
     .preload('spaceStreamer')
     .preload('tracksVersus', (tracksVersusQuery) => {
       tracksVersusQuery.preload('firstTrack')
@@ -36,11 +29,22 @@ const getPlaylistTracks = async ({ response, request, currentDevice }: HttpConte
     throw ApiError.newError('ERROR_INVALID_DATA', 'VCGT-1')
   }
 
+  let nextTracksVersus: BroadcasterVersus | null = null
   // Update the user playlist selected
   await db.transaction(async (trx) => {
     currentUser.playlistSelected = playlist.id
     currentUser.useTransaction(trx)
     await currentUser.save()
+
+    const expiredVersus = await VersusService.getExpiredTracksVersusToProcess(playlist.id)
+
+    if (expiredVersus.length > 0) {
+      for (const versus of expiredVersus) {
+        await VersusService.registerWinner(versus, trx)
+      }
+    }
+
+    nextTracksVersus = await VersusService.getTracksVersusBroadcasted(playlist.id, trx)
   })
 
   // Get the tracks of the playlist
@@ -56,47 +60,6 @@ const getPlaylistTracks = async ({ response, request, currentDevice }: HttpConte
     })
   )
 
-  // Get the pending tracks of the playlist
-  const playlistsPendingTracks = await Promise.all(
-    playlist.playlistPendingTracks.map(async (pendingTrack: PlaylistPendingTrack) => {
-      const trackData = await Track.findBy('id', pendingTrack.trackId)
-
-      if (!trackData) {
-        throw ApiError.newError('ERROR_INVALID_DATA', 'VCGT-2')
-      }
-
-      return { ...trackData.serializeTrack(), ...pendingTrack.serializePlaylistTrack() }
-    })
-  )
-
-  // Get the versus track
-  const firstPendingTrack = await PlaylistPendingTrack.query()
-    .where('playlist_id', playlistId)
-    .andWhere('track_id', playlist.tracksVersus.firstTrackId)
-    .preload('user')
-    .first()
-
-  const secondPendingTrack = await PlaylistPendingTrack.query()
-    .where('playlist_id', playlistId)
-    .andWhere('track_id', playlist.tracksVersus.secondTrackId)
-    .preload('user')
-    .first()
-
-  const versus = {
-    id: playlist.tracksVersus.id,
-    closingDate: playlist.tracksVersus.closingDate,
-    firstTrack: {
-      ...firstPendingTrack?.getUser(),
-      ...(playlist.tracksVersus.firstTrack.serializeTrack() || {}),
-    },
-    secondTrack: {
-      ...secondPendingTrack?.getUser(),
-      ...(playlist.tracksVersus.secondTrack.serializeTrack() || {}),
-    },
-  }
-
-  console.log('versus', versus)
-
   const playlistInfo = {
     id: playlist.id,
     playlistName: playlist.playlistName,
@@ -108,8 +71,7 @@ const getPlaylistTracks = async ({ response, request, currentDevice }: HttpConte
   return response.ok({
     playlistsTracks: playlistsTracks,
     playlistInfo,
-    playlistsPendingTracks,
-    versus,
+    currentTracksVersus: nextTracksVersus,
   })
 }
 

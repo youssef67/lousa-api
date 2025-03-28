@@ -9,7 +9,7 @@ import Playlist from './playlist.js'
 import TwitchUser from './twitch_user.js'
 import SpaceStreamer from './space_streamer.js'
 import PlaylistTrack from './playlist_track.js'
-import PlaylistPendingTrack from './playlist_pending_track.js'
+import TracksVersus from './tracks_versus.js'
 
 export default class User extends BaseModel {
   @column({ isPrimary: true })
@@ -64,8 +64,10 @@ export default class User extends BaseModel {
   @hasMany(() => PlaylistTrack)
   declare playlistTracks: HasMany<typeof PlaylistTrack>
 
-  @hasMany(() => PlaylistPendingTrack)
-  declare playlistPendingTracks: HasMany<typeof PlaylistPendingTrack>
+  @manyToMany(() => TracksVersus, {
+    pivotTable: 'tracks_versus_users',
+  })
+  declare versusTracks: ManyToMany<typeof TracksVersus>
 
   @manyToMany(() => Playlist, {
     pivotTable: 'favorite_playlists_users',

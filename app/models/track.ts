@@ -2,7 +2,7 @@ import { DateTime } from 'luxon'
 import { BaseModel, column, hasMany } from '@adonisjs/lucid/orm'
 import type { HasMany } from '@adonisjs/lucid/types/relations'
 import PlaylistTrack from './playlist_track.js'
-import { TrackSerialized } from '#interfaces/playlist_interface'
+import { DataTrack } from '#interfaces/playlist_interface'
 
 export default class Track extends BaseModel {
   @column({ isPrimary: true })
@@ -38,7 +38,7 @@ export default class Track extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 
-  serializeTrack(): TrackSerialized {
+  serializeTrack(): DataTrack {
     const result = {
       trackId: this.id,
       spotifyTrackId: this.spotifyTrackId,
@@ -47,7 +47,7 @@ export default class Track extends BaseModel {
       album: this.album,
       cover: this.cover,
       url: this.url,
-    } as TrackSerialized
+    } as DataTrack
     return result
   }
 }

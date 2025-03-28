@@ -27,8 +27,8 @@ export default class DeleteLastEntry extends BaseCommand {
 
   async clean() {
     const lastEntry = await PlaylistTrack.query()
-      .where('track_id', '0dd6c050-bca4-4267-80b1-22b44df81200')
-      .andWhere('playlist_id', '169cdd5e-4bcb-4108-97f5-090c40761bb4')
+      .where('track_id', '3bed7e79-7e25-4974-8d2d-05efefa82fec')
+      .andWhere('playlist_id', 'bdb7b326-7733-41ff-8063-5e5566199fef')
       .first()
 
     if (!lastEntry) {
@@ -36,15 +36,14 @@ export default class DeleteLastEntry extends BaseCommand {
       return
     }
 
-    console.log('lastEntry ', lastEntry)
-
     await lastEntry.delete()
     this.logger.success(`✅ Entrée ID ${lastEntry.id} supprimée.`)
 
-    const winnerEntry = await TracksVersus.query().whereNotNull('winner').first()
+    const winnerEntry = await TracksVersus.query().whereNotNull('track_winner').first()
 
     if (winnerEntry) {
-      winnerEntry.winner = null
+      winnerEntry.trackWinner = null
+      winnerEntry.UserWinner = null
       await winnerEntry.save()
       this.logger.success(`✅ Entrée gagnante ID ${winnerEntry.id} réinitialisée.`)
     }

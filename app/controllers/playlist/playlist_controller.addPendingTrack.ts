@@ -4,8 +4,8 @@ import ApiError from '#types/api_error'
 import Playlist from '#models/playlist'
 import db from '@adonisjs/lucid/services/db'
 import Track from '#models/track'
-import { TrackStatus } from '#types/track_status'
-import PlaylistPendingTrack from '#models/playlist_pending_track'
+import TrackService from '#services/track_service'
+import VersusService from '#services/versus_service'
 
 const addPendingTrack = async ({ response, request, currentDevice }: HttpContext) => {
   const payload = await request.validateUsing(addPendingTrackValidator)
@@ -22,30 +22,16 @@ const addPendingTrack = async ({ response, request, currentDevice }: HttpContext
 
   //Add track spotify data to the database
   let track: Track
-  if (!trackExisting) {
-    track = new Track()
-    await db.transaction(async (trx) => {
-      track.spotifyTrackId = payload.track.spotifyTrackId!
-      track.trackName = payload.track.trackName!
-      track.artistName = payload.track.artistName!
-      track.album = payload.track.album!
-      track.cover = payload.track.cover!
-      track.url = payload.track.url!
-      track.useTransaction(trx)
-      await track.save()
-    })
-  } else {
+  if (trackExisting) {
     track = trackExisting
   }
 
-  const pendingTrack = new PlaylistPendingTrack()
   await db.transaction(async (trx) => {
-    pendingTrack.userId = currentUser.id
-    pendingTrack.playlistId = playlist.id
-    pendingTrack.trackId = track.id
-    pendingTrack.status = TrackStatus.OnHold
-    pendingTrack.useTransaction(trx)
-    await pendingTrack.save()
+    if (!trackExisting) {
+      track = await TrackService.addTrack(payload.track, trx)
+    }
+
+    const versus = await VersusService.setActionVersus(track, playlist.id, trx)
   })
 
   return response.ok({ result: true })

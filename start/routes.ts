@@ -96,7 +96,6 @@ router
           .group(() => {
             router.get('track/search', [PlaylistController, 'searchTrack'])
             router.post('track/add', [PlaylistController, 'addTrack'])
-            router.get('refresh/versus', [PlaylistController, 'refreshVersus'])
             router.post('pending/track/add', [PlaylistController, 'addPendingTrack'])
             router.get('', [PlaylistController, 'getPlaylistTracks'])
           })

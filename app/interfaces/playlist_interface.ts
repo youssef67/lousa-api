@@ -1,3 +1,4 @@
+import { DateTime } from 'luxon'
 import { UserSession } from './common_interface.js'
 
 export interface VersusTracksSession {
@@ -21,14 +22,20 @@ export interface PendingTrackSerialized {
   user: UserSession
 }
 
-export interface TrackSerialized {
-  trackId: string
+export interface DataTrack {
+  trackId?: string
   spotifyTrackId: string
   trackName: string
   artistName: string
   album: string
   cover: string
   url: string
+}
+
+export interface WinnerTrack {
+  trackId: string | null
+  userId: string
+  score: number
 }
 
 export interface BroadcasterTrack {
@@ -44,6 +51,29 @@ export interface BroadcasterTrack {
   position: number
   score: number
   user: UserSession
+}
+
+export interface BroadcasterVersus {
+  id: string
+  closingDate: DateTime
+  firstTrackScore: number
+  secondTrackScore: number
+  firstTrack: VersusTrack | null
+  secondTrack: VersusTrack | null
+}
+
+export interface VersusTrack {
+  trackId: string
+  spotifyTrackId: string
+  trackName: string
+  artistName: string
+  album: string
+  cover: string
+  url: string
+  user: {
+    id: string
+    userName?: string | null
+  }
 }
 
 export interface UserFromTrack {

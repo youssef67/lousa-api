@@ -85,8 +85,6 @@ export default class SpotifyUser extends BaseModel {
         }
       )
 
-      console.log('tokenResponse', tokenResponse.data)
-
       return tokenResponse.data as RefreshTokenResponse
     } catch (error) {
       console.log('error', error)

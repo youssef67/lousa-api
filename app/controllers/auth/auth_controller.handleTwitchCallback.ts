@@ -52,7 +52,6 @@ const handleTwitchCallback = async ({ ally, response, request }: HttpContext) =>
         existingTwitchUser.twitchUserLogin = user.nickName
       }
 
-      console.log(user)
       // TODO : a enlever pour la prod
       existingTwitchUser.emailTwitch = `${user.email}-${randomUUID()}` ?? ''
       // existingTwitchUser.emailTwitch = user.email ?? ''

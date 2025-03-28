@@ -1,9 +1,9 @@
 import { DateTime } from 'luxon'
 import { BaseModel, belongsTo, column } from '@adonisjs/lucid/orm'
 import { VersusTracksSession } from '#interfaces/playlist_interface'
-// import PlaylistPendingTrack from './playlist_pending_track.js'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import Track from './track.js'
+import { VersusStatus } from '#types/versus.status'
 
 export default class TracksVersus extends BaseModel {
   @column({ isPrimary: true })
@@ -13,13 +13,16 @@ export default class TracksVersus extends BaseModel {
   declare playlistId: string
 
   @column()
-  declare firstTrackId: string
+  declare firstTrackId: string | null
 
   @column()
-  declare secondTrackId: string
+  declare secondTrackId: string | null
 
   @column()
-  declare firstTrackVotes: number
+  declare firstTrackUser: string | null
+
+  @column()
+  declare secondTrackUser: string | null
 
   @belongsTo(() => Track, {
     foreignKey: 'firstTrackId',
@@ -32,13 +35,22 @@ export default class TracksVersus extends BaseModel {
   declare secondTrack: BelongsTo<typeof Track>
 
   @column()
-  declare secondTrackVotes: number
+  declare firstTrackScore: number
+
+  @column()
+  declare secondTrackScore: number
 
   @column()
   declare closingDate: DateTime
 
   @column()
-  declare winner: string | null
+  declare trackWinner: string | null
+
+  @column()
+  declare UserWinner: string | null
+
+  @column()
+  declare status: VersusStatus
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -58,8 +70,8 @@ export default class TracksVersus extends BaseModel {
   serializeVersusTrack(): VersusTracksSession {
     const result = {
       id: this.id,
-      firstTrackVotes: this.firstTrackVotes,
-      secondTrackVotes: this.secondTrackVotes,
+      firstTrackScore: this.firstTrackScore,
+      secondTrackScore: this.secondTrackScore,
       firstTrack: this.firstTrack.serializeTrack(),
       secondTrack: this.secondTrack.serializeTrack(),
     } as VersusTracksSession

@@ -17,7 +17,6 @@ export default class AuthApiTokenMiddleware {
     const deviceId = unsign(request.header('x-d-i')?.slice(2) || '', env.get('COOKIE_SECRET')) // x-d-i stands for device id
     const accessToken = unsign(request.header('x-d-a')?.slice(2) || '', env.get('COOKIE_SECRET')) // x-d-a stands for access token
 
-    console.log()
     if (!deviceId || !isUuid(deviceId)) {
       const apiError = new ApiError('Invalid data', 'ERROR_INVALID_DATA', 'ATHT-1')
       return response.unprocessableEntity(apiError.toJson())
