@@ -87,7 +87,6 @@ export default class SpotifyUser extends BaseModel {
 
       return tokenResponse.data as RefreshTokenResponse
     } catch (error) {
-      console.log('error', error)
       throw ApiError.newError('ERROR_INVALID_DATA', 'SMRT-1')
     }
   }

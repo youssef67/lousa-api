@@ -188,6 +188,7 @@ export default class UsersGenerate extends BaseCommand {
           email,
           userName: randomUser!,
           role: UserRole.User,
+          amountVirtualCurrency: Math.floor(Math.random() * 1001),
         })
         .create()
 

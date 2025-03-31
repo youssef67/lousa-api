@@ -24,6 +24,7 @@
     "setup:api": "node ace setup:api",
     "playlists:generate": "node ace playlists:generate",
     "favorites:generate": "node ace favorites:generate",
+    "likes:generate": "node ace likes:generate",
     "delete:last": "node ace delete:last"
 
   },

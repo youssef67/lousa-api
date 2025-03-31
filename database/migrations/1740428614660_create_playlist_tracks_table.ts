@@ -11,6 +11,7 @@ export default class extends BaseSchema {
       table.uuid('track_id').nullable().references('id').inTable('tracks').onDelete('CASCADE')
       table.integer('vote').defaultTo(0)
       table.integer('score').defaultTo(0).notNullable()
+      table.integer('special_score').defaultTo(0).notNullable()
       table.boolean('is_ranked').notNullable()
       table.integer('position').nullable()
       table.string('status').notNullable().defaultTo('active')

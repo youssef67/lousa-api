@@ -16,6 +16,8 @@ export default class extends BaseSchema {
         .onDelete('CASCADE')
       table.integer('first_track_score').notNullable().defaultTo(0)
       table.integer('second_track_score').notNullable().defaultTo(0)
+      table.integer('special_like_first_track').notNullable().defaultTo(0)
+      table.integer('special_like_second_track').notNullable().defaultTo(0)
       table.uuid('first_track_user').nullable()
       table.uuid('second_track_user').nullable()
       table.timestamp('closing_date')

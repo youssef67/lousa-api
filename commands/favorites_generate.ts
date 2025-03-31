@@ -37,11 +37,7 @@ export default class FavoritesGenerate extends BaseCommand {
   }
 
   async createViewerProfile() {
-    const viewers = await User.query()
-      .whereLike('email', '%viewer%')
-      .andWhereLike('email', '%viewer-4%')
-      .limit(5)
-      .orderByRaw('RANDOM()')
+    const viewers = await User.query().whereLike('email', '%viewer%').orderByRaw('RANDOM()')
 
     if (viewers.length === 0) {
       throw new Error(`Users not found`)

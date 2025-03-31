@@ -10,6 +10,7 @@ import TwitchUser from './twitch_user.js'
 import SpaceStreamer from './space_streamer.js'
 import PlaylistTrack from './playlist_track.js'
 import TracksVersus from './tracks_versus.js'
+import LikeTrack from './like_track.js'
 
 export default class User extends BaseModel {
   @column({ isPrimary: true })
@@ -29,6 +30,9 @@ export default class User extends BaseModel {
 
   @column()
   declare userName?: string
+
+  @column()
+  declare amountVirtualCurrency: number
 
   @column()
   declare role: UserRole
@@ -63,6 +67,9 @@ export default class User extends BaseModel {
 
   @hasMany(() => PlaylistTrack)
   declare playlistTracks: HasMany<typeof PlaylistTrack>
+
+  @hasMany(() => LikeTrack)
+  declare likeTracks: HasMany<typeof LikeTrack>
 
   @manyToMany(() => TracksVersus, {
     pivotTable: 'tracks_versus_users',
@@ -102,6 +109,7 @@ export default class User extends BaseModel {
       lastName: this.lastName,
       email: this.email,
       role: this.role,
+      amountVirtualCurrency: this.amountVirtualCurrency,
       twitchUser: this.twitchUser?.serializeAsSession() || undefined,
       spotifyUser: this.spotifyUser?.serializeAsSession() || undefined,
     } as UserSession

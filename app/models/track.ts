@@ -3,6 +3,7 @@ import { BaseModel, column, hasMany } from '@adonisjs/lucid/orm'
 import type { HasMany } from '@adonisjs/lucid/types/relations'
 import PlaylistTrack from './playlist_track.js'
 import { DataTrack } from '#interfaces/playlist_interface'
+import LikeTrack from './like_track.js'
 
 export default class Track extends BaseModel {
   @column({ isPrimary: true })
@@ -29,14 +30,17 @@ export default class Track extends BaseModel {
   @column()
   declare duration: number
 
-  @hasMany(() => PlaylistTrack)
-  declare playlistTracks: HasMany<typeof PlaylistTrack>
-
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
+
+  @hasMany(() => PlaylistTrack)
+  declare playlistTracks: HasMany<typeof PlaylistTrack>
+
+  @hasMany(() => LikeTrack)
+  declare likeTracks: HasMany<typeof LikeTrack>
 
   serializeTrack(): DataTrack {
     const result = {

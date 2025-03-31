@@ -22,6 +22,9 @@ export default class PlaylistTrack extends BaseModel {
   declare score: number
 
   @column()
+  declare specialScore: number
+
+  @column()
   declare vote: number
 
   @column()
@@ -59,7 +62,8 @@ export default class PlaylistTrack extends BaseModel {
       vote: this.vote,
       position: this.position,
       score: this.score,
-      user: this.user.serializeAsSession() || undefined,
+      specialScore: this.specialScore,
+      user: this.user ? this.user.serializeAsSession() : null,
     } as PlaylistTrackSerialized
     return result
   }

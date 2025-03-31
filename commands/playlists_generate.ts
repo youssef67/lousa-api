@@ -11,7 +11,7 @@ import TrackService from '#services/track_service'
 import VersusService from '#services/versus_service'
 import { ModelStatus } from '#types/model_status'
 import { TrackStatus } from '#types/track_status'
-import { VersusStatus } from '#types/versus.status'
+import { TracksVersusStatus } from '#types/versus.status'
 import { args, BaseCommand } from '@adonisjs/core/ace'
 import type { CommandOptions } from '@adonisjs/core/types/ace'
 import db from '@adonisjs/lucid/services/db'
@@ -258,8 +258,10 @@ export default class PlaylistsGenerate extends BaseCommand {
 
             if (createVersusForViewerFour) {
               const firstUser = await User.query().whereLike('email', '%viewer-4%').first()
+
               const secondUser = await User.query()
                 .whereLike('email', '%viewer%')
+                .whereNot('id', firstUser?.id!)
                 .orderByRaw('RANDOM()')
                 .limit(1)
                 .first()
@@ -271,7 +273,7 @@ export default class PlaylistsGenerate extends BaseCommand {
                 currentTrack,
                 firstUser!,
                 secondUser!,
-                VersusStatus.VotingProgress
+                TracksVersusStatus.VotingProgress
               )
 
               await trx.insertQuery().table('tracks_versus_users').insert({
@@ -296,7 +298,7 @@ export default class PlaylistsGenerate extends BaseCommand {
                 currentTrack,
                 users[0],
                 users[1],
-                VersusStatus.OnHold
+                TracksVersusStatus.OnHold
               )
 
               for (const u of users) {

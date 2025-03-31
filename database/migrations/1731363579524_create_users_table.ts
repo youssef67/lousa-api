@@ -12,6 +12,7 @@ export default class extends BaseSchema {
       table.string('last_name').nullable()
       table.string('role').notNullable()
       table.string('status').notNullable().defaultTo('enabled')
+      table.integer('amount_virtual_currency').defaultTo(0)
       // TODO : remettre en unique() pour le twitch_user_id et le spotify_user_id
       table.uuid('spotify_user_id').nullable()
       table.uuid('twitch_user_id').nullable()

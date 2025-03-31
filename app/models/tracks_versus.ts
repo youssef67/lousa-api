@@ -1,9 +1,10 @@
 import { DateTime } from 'luxon'
-import { BaseModel, belongsTo, column } from '@adonisjs/lucid/orm'
+import { BaseModel, belongsTo, column, hasMany } from '@adonisjs/lucid/orm'
 import { VersusTracksSession } from '#interfaces/playlist_interface'
-import type { BelongsTo } from '@adonisjs/lucid/types/relations'
+import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
 import Track from './track.js'
-import { VersusStatus } from '#types/versus.status'
+import { TracksVersusStatus } from '#types/versus.status'
+import LikeTrack from './like_track.js'
 
 export default class TracksVersus extends BaseModel {
   @column({ isPrimary: true })
@@ -24,21 +25,17 @@ export default class TracksVersus extends BaseModel {
   @column()
   declare secondTrackUser: string | null
 
-  @belongsTo(() => Track, {
-    foreignKey: 'firstTrackId',
-  })
-  declare firstTrack: BelongsTo<typeof Track>
-
-  @belongsTo(() => Track, {
-    foreignKey: 'secondTrackId',
-  })
-  declare secondTrack: BelongsTo<typeof Track>
-
   @column()
   declare firstTrackScore: number
 
   @column()
   declare secondTrackScore: number
+
+  @column()
+  declare specialLikeFirstTrack: number
+
+  @column()
+  declare specialLikeSecondTrack: number
 
   @column()
   declare closingDate: DateTime
@@ -50,13 +47,26 @@ export default class TracksVersus extends BaseModel {
   declare UserWinner: string | null
 
   @column()
-  declare status: VersusStatus
+  declare status: TracksVersusStatus
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
+
+  @hasMany(() => LikeTrack)
+  declare likeTracks: HasMany<typeof LikeTrack>
+
+  @belongsTo(() => Track, {
+    foreignKey: 'firstTrackId',
+  })
+  declare firstTrack: BelongsTo<typeof Track>
+
+  @belongsTo(() => Track, {
+    foreignKey: 'secondTrackId',
+  })
+  declare secondTrack: BelongsTo<typeof Track>
 
   async loadForSerialization() {
     // we use this hack to allows to call user.load('XXXX')

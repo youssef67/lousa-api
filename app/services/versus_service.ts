@@ -1,9 +1,10 @@
 import { BroadcasterVersus, WinnerTrack } from '#interfaces/playlist_interface'
+import LikeTrack from '#models/like_track'
 import Track from '#models/track'
 import TracksVersus from '#models/tracks_versus'
 import User from '#models/user'
 import ApiError from '#types/api_error'
-import { VersusStatus } from '#types/versus.status'
+import { TracksVersusStatus } from '#types/versus.status'
 import type { TransactionClientContract } from '@adonisjs/lucid/types/database'
 import { DateTime } from 'luxon'
 
@@ -69,26 +70,28 @@ export default class VersusService {
 
   static async getTracksVersusBroadcasted(
     playlistId: string,
+    userId: string,
     trx: TransactionClientContract
   ): Promise<BroadcasterVersus | null> {
     let nextTracksVersus = await TracksVersus.query({ client: trx })
       .where('playlist_id', playlistId)
-      .andWhere('status', VersusStatus.VotingProgress)
+      .andWhere('status', TracksVersusStatus.VotingProgress)
       .preload('firstTrack')
       .preload('secondTrack')
+      .preload('likeTracks')
       .first()
 
     // Si aucun Versus actif, on cherche un OnHold à activer
     if (!nextTracksVersus) {
       nextTracksVersus = await TracksVersus.query({ client: trx })
         .where('playlist_id', playlistId)
-        .andWhere('status', VersusStatus.OnHold)
+        .andWhere('status', TracksVersusStatus.OnHold)
         .preload('firstTrack')
         .preload('secondTrack')
         .first()
 
       if (nextTracksVersus) {
-        nextTracksVersus.status = VersusStatus.VotingProgress
+        nextTracksVersus.status = TracksVersusStatus.VotingProgress
         nextTracksVersus.closingDate = DateTime.now().plus({ seconds: 15 }) // ← optionnel : nouvelle durée
         nextTracksVersus.useTransaction(trx)
         await nextTracksVersus.save()
@@ -103,7 +106,29 @@ export default class VersusService {
       nextTracksVersus.secondTrackUser ? User.findBy('id', nextTracksVersus.secondTrackUser) : null,
     ])
 
-    const mapTrack = (track: Track | null, user: User | null): BroadcasterVersus['firstTrack'] => {
+    let nbLikesOfFirstTrack: LikeTrack[] = []
+    let nbLikesOfSecondTrack: LikeTrack[] = []
+    let firstTrackIsLikedByUser = false
+    let secondTrackIsLikedByUser = false
+    if (nextTracksVersus.likeTracks) {
+      nbLikesOfFirstTrack = nextTracksVersus.likeTracks.filter(
+        (like) => like.trackId === nextTracksVersus.firstTrackId
+      )
+      firstTrackIsLikedByUser = nbLikesOfFirstTrack.some((like) => like.userId === userId)
+
+      nbLikesOfSecondTrack = nextTracksVersus.likeTracks.filter(
+        (like) => like.trackId === nextTracksVersus.secondTrackId
+      )
+
+      secondTrackIsLikedByUser = nbLikesOfSecondTrack.some((like) => like.userId === userId)
+    }
+
+    const mapTrack = (
+      track: Track | null,
+      user: User | null,
+      nbLikes: number,
+      isLikedByUser: boolean
+    ): BroadcasterVersus['firstTrack'] => {
       if (!track) return null
 
       return {
@@ -114,6 +139,8 @@ export default class VersusService {
         album: track.album,
         cover: track.cover,
         url: track.url,
+        nbLikes,
+        isLikedByUser,
         user: {
           id: user?.id ?? 'unknown',
           userName: user?.userName ?? null,
@@ -121,16 +148,28 @@ export default class VersusService {
       }
     }
 
-    const versusBroadcasted: BroadcasterVersus = {
+    const tracksVersusBroadcasted: BroadcasterVersus = {
       id: nextTracksVersus.id,
       closingDate: nextTracksVersus.closingDate,
       firstTrackScore: nextTracksVersus.firstTrackScore,
+      specialLikeFirstTrack: nextTracksVersus.specialLikeFirstTrack,
       secondTrackScore: nextTracksVersus.secondTrackScore,
-      firstTrack: mapTrack(nextTracksVersus.firstTrack, firstUser),
-      secondTrack: mapTrack(nextTracksVersus.secondTrack, secondUser),
+      specialLikeSecondTrack: nextTracksVersus.specialLikeSecondTrack,
+      firstTrack: mapTrack(
+        nextTracksVersus.firstTrack,
+        firstUser,
+        nbLikesOfFirstTrack.length,
+        firstTrackIsLikedByUser
+      ),
+      secondTrack: mapTrack(
+        nextTracksVersus.secondTrack,
+        secondUser,
+        nbLikesOfSecondTrack.length,
+        secondTrackIsLikedByUser
+      ),
     }
 
-    return versusBroadcasted
+    return tracksVersusBroadcasted
   }
 
   static async getExpiredTracksVersusToProcess(playlistId: string): Promise<TracksVersus[]> {
@@ -147,40 +186,112 @@ export default class VersusService {
     tracksVersus: TracksVersus,
     trx: TransactionClientContract
   ): Promise<WinnerTrack> {
-    let winnerTrack: WinnerTrack = {
+    const winnerTrack: WinnerTrack = {
       trackId: null,
       userId: '',
       score: 0,
+      specialScore: 0,
+      spotifyTrackId: '',
     }
 
-    if (tracksVersus.firstTrackScore > tracksVersus.secondTrackScore) {
-      // 1. Enregistrer le gagnant
-      tracksVersus.status = VersusStatus.CompletedVotes
-      tracksVersus.trackWinner = tracksVersus.firstTrackId
-      tracksVersus.UserWinner = tracksVersus.firstTrackUser
+    const assignWinner = (
+      trackId: string | null,
+      userId: string | null,
+      score: number,
+      specialScore: number
+    ) => {
+      tracksVersus.status = TracksVersusStatus.CompletedVotes
+      tracksVersus.trackWinner = trackId
+      tracksVersus.UserWinner = userId
 
-      // 2 Définir l'objet de retour
-      winnerTrack.trackId = tracksVersus.firstTrackId
-      winnerTrack.userId = tracksVersus.firstTrack?.spotifyTrackId!
-      winnerTrack.score = tracksVersus.firstTrackScore
-    } else if (tracksVersus.firstTrackScore < tracksVersus.secondTrackScore) {
-      // 1. Enregistrer le gagnant
-      tracksVersus.status = VersusStatus.CompletedVotes
-      tracksVersus.trackWinner = tracksVersus.secondTrackId
-      tracksVersus.UserWinner = tracksVersus.secondTrackUser
+      winnerTrack.trackId = trackId
+      winnerTrack.userId = userId ?? ''
+      winnerTrack.score = score
+      winnerTrack.specialScore = specialScore
+    }
 
-      // 2 Définir l'objet de retour
-      winnerTrack.trackId = tracksVersus.secondTrackId
-      winnerTrack.userId = tracksVersus.secondTrack?.spotifyTrackId!
-      winnerTrack.score = tracksVersus.secondTrackScore
+    const {
+      specialLikeFirstTrack,
+      specialLikeSecondTrack,
+      firstTrackScore,
+      secondTrackScore,
+      firstTrackId,
+      secondTrackId,
+      firstTrackUser,
+      secondTrackUser,
+    } = tracksVersus
+
+    if (specialLikeFirstTrack > specialLikeSecondTrack) {
+      assignWinner(
+        firstTrackId,
+        firstTrackUser,
+        specialLikeFirstTrack * 10 + firstTrackScore,
+        specialLikeFirstTrack
+      )
+    } else if (specialLikeFirstTrack < specialLikeSecondTrack) {
+      assignWinner(
+        secondTrackId,
+        secondTrackUser,
+        specialLikeSecondTrack * 10 + secondTrackScore,
+        specialLikeSecondTrack
+      )
+    } else if (firstTrackScore > secondTrackScore) {
+      assignWinner(firstTrackId, firstTrackUser, firstTrackScore, 0)
+    } else if (firstTrackScore < secondTrackScore) {
+      assignWinner(secondTrackId, secondTrackUser, secondTrackScore, 0)
     } else {
-      tracksVersus.status = VersusStatus.CompletedVotes
+      // Égalité parfaite
+      tracksVersus.status = TracksVersusStatus.CompletedVotes
     }
 
     tracksVersus.useTransaction(trx)
     await tracksVersus.save()
 
+    const track = await Track.findBy('id', winnerTrack.trackId)
+    winnerTrack.spotifyTrackId = track?.spotifyTrackId ?? ''
+
     return winnerTrack
+  }
+
+  static async likeTrack(
+    tracksVersus: TracksVersus,
+    trackId: string,
+    currentUserId: string,
+    targetTrack: number,
+    trx: TransactionClientContract
+  ): Promise<void> {
+    if (targetTrack === 1) tracksVersus.firstTrackScore += 10
+    if (targetTrack === 2) tracksVersus.secondTrackScore += 10
+    tracksVersus.useTransaction(trx)
+    await tracksVersus.save()
+
+    const like = new LikeTrack()
+    like.userId = currentUserId
+    like.trackId = trackId
+    like.tracksVersusId = tracksVersus.id
+    like.useTransaction(trx)
+    await like.save()
+  }
+
+  static async SpecialLikeTrack(
+    tracksVersus: TracksVersus,
+    user: User,
+    targetTrack: number,
+    amount: number,
+    trx: TransactionClientContract
+  ): Promise<User> {
+    if (targetTrack === 1) tracksVersus.specialLikeFirstTrack += amount
+    if (targetTrack === 2) tracksVersus.specialLikeSecondTrack += amount
+    tracksVersus.useTransaction(trx)
+    await tracksVersus.save()
+
+    await User.query({ client: trx })
+      .where('id', user.id)
+      .update({
+        amountVirtualCurrency: user.amountVirtualCurrency - amount,
+      })
+
+    return user
   }
 
   static async createTracksVersusCommand(
@@ -190,7 +301,7 @@ export default class VersusService {
     secondTrack: Track,
     firstUser: User,
     secondUser: User,
-    status: VersusStatus
+    status: TracksVersusStatus
   ): Promise<TracksVersus> {
     const newVersus = new TracksVersus()
     newVersus.playlistId = playlistId
@@ -201,7 +312,7 @@ export default class VersusService {
     newVersus.secondTrackScore = 0
     newVersus.secondTrackUser = secondUser.id
     newVersus.status = status
-    newVersus.closingDate = DateTime.now().plus({ second: 15 })
+    newVersus.closingDate = DateTime.now().plus({ seconds: 45 })
     newVersus.useTransaction(trx)
     await newVersus.save()
 

@@ -10,7 +10,6 @@ import VersusService from '#services/versus_service'
 const addPendingTrack = async ({ response, request, currentDevice }: HttpContext) => {
   const payload = await request.validateUsing(addPendingTrackValidator)
   await currentDevice.load('user')
-  const currentUser = currentDevice.user
 
   const playlist = await Playlist.findBy('id', payload.playlistId)
 
@@ -31,7 +30,7 @@ const addPendingTrack = async ({ response, request, currentDevice }: HttpContext
       track = await TrackService.addTrack(payload.track, trx)
     }
 
-    const versus = await VersusService.setActionVersus(track, playlist.id, trx)
+    await VersusService.setActionVersus(track, playlist.id, trx)
   })
 
   return response.ok({ result: true })

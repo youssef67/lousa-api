@@ -9,6 +9,7 @@ interface AddTrackOptions {
   trackId: string
   userId: string
   score: number
+  specialScore: number
   maxTracks?: number
 }
 
@@ -20,7 +21,7 @@ export default class PlaylistService {
     options: AddTrackOptions,
     trx: TransactionClientContract
   ): Promise<PlaylistTrack[]> {
-    const { playlistId, trackId, userId, score, maxTracks = 20 } = options
+    const { playlistId, trackId, userId, score, specialScore, maxTracks = 20 } = options
 
     // 1. Ajouter la track gagnante
     const newTrack = new PlaylistTrack()
@@ -28,6 +29,7 @@ export default class PlaylistService {
     newTrack.trackId = trackId
     newTrack.userId = userId
     newTrack.score = score
+    newTrack.specialScore = specialScore
     newTrack.isRanked = true
     newTrack.status = TrackStatus.Active
     newTrack.useTransaction(trx)

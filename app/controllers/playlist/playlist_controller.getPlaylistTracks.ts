@@ -5,13 +5,14 @@ import db from '@adonisjs/lucid/services/db'
 import PlaylistTrack from '#models/playlist_track'
 import Track from '#models/track'
 import VersusService from '#services/versus_service'
-import { BroadcasterVersus } from '#interfaces/playlist_interface'
+import { BroadcasterVersus, ScoreAndLikes } from '#interfaces/playlist_interface'
 
 const getPlaylistTracks = async ({ response, request, currentDevice }: HttpContext) => {
   const playlistId = request.input('playlistId')
   await currentDevice.load('user')
   const currentUser = currentDevice.user
 
+  console.log('currentUser', currentUser)
   // Get the playlist
   const playlist = await Playlist.query()
     .where('id', playlistId)
@@ -30,6 +31,7 @@ const getPlaylistTracks = async ({ response, request, currentDevice }: HttpConte
   }
 
   let nextTracksVersus: BroadcasterVersus | null = null
+  let scoreAndLikes: ScoreAndLikes | null = null
   // Update the user playlist selected
   await db.transaction(async (trx) => {
     currentUser.playlistSelected = playlist.id
@@ -44,7 +46,24 @@ const getPlaylistTracks = async ({ response, request, currentDevice }: HttpConte
       }
     }
 
-    nextTracksVersus = await VersusService.getTracksVersusBroadcasted(playlist.id, trx)
+    nextTracksVersus = await VersusService.getTracksVersusBroadcasted(
+      playlist.id,
+      currentUser.id,
+      trx
+    )
+
+    if (nextTracksVersus) {
+      scoreAndLikes = {
+        firstTrackScore: nextTracksVersus.firstTrackScore,
+        firstTrackAlreadyLiked: nextTracksVersus.firstTrack?.isLikedByUser || false,
+        specialLikeFirstTrack: nextTracksVersus.specialLikeFirstTrack,
+        secondTrackScore: nextTracksVersus.secondTrackScore,
+        secondTrackAlreadyLiked: nextTracksVersus.secondTrack?.isLikedByUser || false,
+        specialLikeSecondTrack: nextTracksVersus.specialLikeSecondTrack,
+        nbLikesFirstTrack: nextTracksVersus.firstTrack?.nbLikes || 0,
+        nbLikesSecondTrack: nextTracksVersus.secondTrack?.nbLikes || 0,
+      }
+    }
   })
 
   // Get the tracks of the playlist
@@ -72,6 +91,8 @@ const getPlaylistTracks = async ({ response, request, currentDevice }: HttpConte
     playlistsTracks: playlistsTracks,
     playlistInfo,
     currentTracksVersus: nextTracksVersus,
+    scoreAndLikes,
+    user: currentUser.serializeAsSession(),
   })
 }
 

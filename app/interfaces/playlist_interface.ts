@@ -13,6 +13,7 @@ export interface PlaylistTrackSerialized {
   vote: number
   position: number
   score: number
+  specialScore: number
   user: UserSession
 }
 
@@ -36,6 +37,8 @@ export interface WinnerTrack {
   trackId: string | null
   userId: string
   score: number
+  specialScore: number
+  spotifyTrackId: string
 }
 
 export interface BroadcasterTrack {
@@ -50,6 +53,7 @@ export interface BroadcasterTrack {
   vote: number
   position: number
   score: number
+  specialScore: number
   user: UserSession
 }
 
@@ -57,9 +61,22 @@ export interface BroadcasterVersus {
   id: string
   closingDate: DateTime
   firstTrackScore: number
+  specialLikeFirstTrack: number
   secondTrackScore: number
+  specialLikeSecondTrack: number
   firstTrack: VersusTrack | null
   secondTrack: VersusTrack | null
+}
+
+export interface ScoreAndLikes {
+  firstTrackScore: number
+  firstTrackAlreadyLiked: boolean
+  specialLikeFirstTrack: number
+  secondTrackScore: number
+  secondTrackAlreadyLiked: boolean
+  specialLikeSecondTrack: number
+  nbLikesFirstTrack: number
+  nbLikesSecondTrack: number
 }
 
 export interface VersusTrack {
@@ -70,6 +87,8 @@ export interface VersusTrack {
   album: string
   cover: string
   url: string
+  nbLikes: number
+  isLikedByUser: boolean
   user: {
     id: string
     userName?: string | null

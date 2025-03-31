@@ -2,7 +2,11 @@ import type { HttpContext } from '@adonisjs/core/http'
 import { addTrackValidator } from '#validators/playlist'
 import ApiError from '#types/api_error'
 import transmit from '@adonisjs/transmit/services/main'
-import { sanitizePlaylistTracks, sanitizeTracksVersus } from '#utils/sanitize_broadcast'
+import {
+  sanitizePlaylistTracks,
+  sanitizeTracksVersus,
+  sanitizeScoreAndLikes,
+} from '#utils/sanitize_broadcast'
 import db from '@adonisjs/lucid/services/db'
 import PlaylistTrack from '#models/playlist_track'
 import Track from '#models/track'
@@ -10,10 +14,12 @@ import VersusService from '#services/versus_service'
 import SpotifyService from '#services/spotify_service'
 import PlaylistService from '#services/playlist_service'
 import { BroadcasterVersus } from '#interfaces/playlist_interface'
+import { Broadcastable } from '#types/broadcastable'
 
 const addTrack = async ({ response, request, currentDevice }: HttpContext) => {
   const payload = await request.validateUsing(addTrackValidator)
   await currentDevice.load('user')
+  const currentUser = currentDevice.user
 
   const maxTrackOnPlaylist = 20
 
@@ -31,16 +37,15 @@ const addTrack = async ({ response, request, currentDevice }: HttpContext) => {
     // a. Enregistrer le gagnant
     const winnerTrack = await VersusService.registerWinner(tracksVersus, trx)
     // b. Ajouter le track et réordonner
-    console.log('Winner track 1', winnerTrack)
 
     if (winnerTrack.trackId) {
-      console.log('Winner track 2', winnerTrack)
       rankedTracks = await PlaylistService.addRankedTrackAndReorder(
         {
           playlistId: tracksVersus.playlistId,
           trackId: winnerTrack.trackId,
           userId: winnerTrack.userId,
           score: winnerTrack.score,
+          specialScore: winnerTrack.specialScore,
           maxTracks: maxTrackOnPlaylist,
         },
         trx
@@ -54,7 +59,7 @@ const addTrack = async ({ response, request, currentDevice }: HttpContext) => {
       // e. Ajouter la track dans la playlist Spotify
       const snapshot = await SpotifyService.addTrackToSpotifyPlaylist(
         playlist,
-        payload.spotifyTrackId!,
+        winnerTrack.spotifyTrackId,
         spotifyUser.accessToken
       )
       // f. Mettre à jour le snapshot en BDD
@@ -64,16 +69,22 @@ const addTrack = async ({ response, request, currentDevice }: HttpContext) => {
       rankedTracks = await PlaylistService.getPlaylistTracksRanked(tracksVersus.playlistId, trx)
     }
 
-    newTracksVersus = await VersusService.getTracksVersusBroadcasted(playlist.id, trx)
+    newTracksVersus = await VersusService.getTracksVersusBroadcasted(
+      playlist.id,
+      currentUser.id,
+      trx
+    )
   })
 
   // 4. Formatter les données pour la diffusion
   const trackIds = rankedTracks.map((t) => t.trackId)
+
   const allTracks = await Track.query()
     .whereIn('id', trackIds)
     .preload('playlistTracks', (query) => {
       query.preload('user')
     })
+
   const trackMap = new Map(allTracks.map((t) => [t.id, t]))
 
   const playlistTracksUpdated = rankedTracks.map((track) => {
@@ -87,11 +98,13 @@ const addTrack = async ({ response, request, currentDevice }: HttpContext) => {
 
   // 5. Broadcast de la nouvelle playlist
   const cleanTracks = sanitizePlaylistTracks(playlistTracksUpdated)
-  const cleanVersus = newTracksVersus ? sanitizeTracksVersus(newTracksVersus) : newTracksVersus
+  const nextTracksVersus = newTracksVersus ? sanitizeTracksVersus(newTracksVersus) : newTracksVersus
+  const scoreAndLikes = newTracksVersus ? sanitizeScoreAndLikes(newTracksVersus) : null
 
   transmit.broadcast(`playlist/updated/${tracksVersus.playlistId}`, {
     playlistTracksUpdated: cleanTracks,
-    cleanVersus: cleanVersus,
+    nextTracksVersus: nextTracksVersus,
+    scoreAndLikes: scoreAndLikes as Record<string, Broadcastable>,
   })
 }
 

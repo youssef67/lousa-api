@@ -6,6 +6,7 @@ export interface UserSession {
   email?: string
   dateOfBirth?: string
   role: string
+  amountVirtualCurrency: number
   twitchUser?: TwitchUserSession
   spotifyUser?: SpotifyUserSession
 }
