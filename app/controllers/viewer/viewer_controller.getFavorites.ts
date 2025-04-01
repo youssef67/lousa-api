@@ -1,6 +1,7 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import ApiError from '#types/api_error'
 import User from '#models/user'
+import db from '@adonisjs/lucid/services/db'
 
 const getFavorites = async ({ response, currentDevice }: HttpContext) => {
   await currentDevice.load('user')
@@ -31,7 +32,12 @@ const getFavorites = async ({ response, currentDevice }: HttpContext) => {
   const playlistsFavorites = await Promise.all(
     viewer.favoritesPlaylists.map(async (playlist) => {
       await playlist.load('spaceStreamer')
-      await playlist.load('playlistTracks')
+      await playlist.load('playlistTracks', (q) => q.where('isRanked', true))
+
+      const nbFollowers = await db
+        .from('favorite_playlists_users')
+        .where('playlist_id', playlist.id)
+        .count('*')
 
       return {
         id: playlist.id,
@@ -40,6 +46,7 @@ const getFavorites = async ({ response, currentDevice }: HttpContext) => {
         spaceStreamerImg: playlist.spaceStreamer.spaceStreamerImg,
         nbTracks: playlist.playlistTracks.length,
         isSelected: playlist.id === currentUser.playlistSelected,
+        nbFollowers: Number.parseInt(nbFollowers[0].count),
       }
     })
   )

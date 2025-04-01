@@ -14,7 +14,6 @@ const specialLikeTrack = async ({ request, currentDevice }: HttpContext) => {
   await currentDevice.load('user')
   const currentUser = currentDevice.user
 
-  console.log('payload', payload)
   const tracksVersusExisting = await TracksVersus.find(payload.tracksVersusId)
 
   if (!tracksVersusExisting) {

@@ -312,7 +312,7 @@ export default class VersusService {
     newVersus.secondTrackScore = 0
     newVersus.secondTrackUser = secondUser.id
     newVersus.status = status
-    newVersus.closingDate = DateTime.now().plus({ seconds: 45 })
+    newVersus.closingDate = DateTime.now().plus({ seconds: 30 })
     newVersus.useTransaction(trx)
     await newVersus.save()
 

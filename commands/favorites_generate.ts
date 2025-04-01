@@ -36,8 +36,49 @@ export default class FavoritesGenerate extends BaseCommand {
     })
   }
 
+  async createViewerFour() {
+    const viewerFour = await User.query().whereLike('email', '%viewer-4%').first()
+
+    if (!viewerFour) {
+      throw new Error(`User not found`)
+    }
+
+    const spaceStreamers = await SpaceStreamer.query().whereNotNull('twitch_user_id')
+
+    const nbToPick = this.getRandomInt(1, spaceStreamers.length)
+    const spaceStreamersRandom = await this.getRandomElements(spaceStreamers, nbToPick)
+
+    for (const spaceStreamer of spaceStreamersRandom) {
+      await viewerFour.related('favoritesSpaceStreamers').attach([spaceStreamer.id])
+
+      await spaceStreamer.load('playlists')
+
+      const playlistsRandom = await this.getRandomElements(
+        spaceStreamer.playlists,
+        Math.floor(Math.random() * (3 - 1 + 1)) + 1
+      )
+
+      for (const playlist of playlistsRandom) {
+        if (!viewerFour.playlistSelected) {
+          const randomPlaylist = playlistsRandom[Math.floor(Math.random() * playlistsRandom.length)]
+
+          await User.query().where('id', viewerFour.id).update({
+            playlistSelected: randomPlaylist.id,
+          })
+        }
+
+        await viewerFour.related('favoritesPlaylists').attach([playlist.id])
+      }
+    }
+  }
+
   async createViewerProfile() {
-    const viewers = await User.query().whereLike('email', '%viewer%').orderByRaw('RANDOM()')
+    const nbViewers = Math.floor(Math.random() * (20 - 10 + 1)) + 10
+
+    const viewers = await User.query()
+      .whereLike('email', '%viewer%')
+      .orderByRaw('RANDOM()')
+      .limit(nbViewers)
 
     if (viewers.length === 0) {
       throw new Error(`Users not found`)
@@ -46,20 +87,41 @@ export default class FavoritesGenerate extends BaseCommand {
     const spaceStreamers = await SpaceStreamer.query().whereNotNull('twitch_user_id')
 
     for (const viewer of viewers) {
-      for (const spaceStreamer of spaceStreamers) {
+      const nbToPick = this.getRandomInt(1, spaceStreamers.length)
+      const spaceStreamersRandom = await this.getRandomElements(spaceStreamers, nbToPick)
+
+      for (const spaceStreamer of spaceStreamersRandom) {
         await viewer.related('favoritesSpaceStreamers').attach([spaceStreamer.id])
 
         await spaceStreamer.load('playlists')
 
-        for (const playlist of spaceStreamer.playlists) {
+        const playlistsRandom = await this.getRandomElements(
+          spaceStreamer.playlists,
+          Math.floor(Math.random() * (3 - 1 + 1)) + 1
+        )
+
+        for (const playlist of playlistsRandom) {
           if (!viewer.playlistSelected) {
+            const randomPlaylist =
+              playlistsRandom[Math.floor(Math.random() * playlistsRandom.length)]
+
             await User.query().where('id', viewer.id).update({
-              playlistSelected: playlist.id,
+              playlistSelected: randomPlaylist.id,
             })
           }
+
           await viewer.related('favoritesPlaylists').attach([playlist.id])
         }
       }
     }
+  }
+
+  async getRandomElements(arr: any[], count: number) {
+    const shuffled = [...arr].sort(() => 0.5 - Math.random()) // on mélange
+    return shuffled.slice(0, count) // on prend les n premiers
+  }
+
+  private getRandomInt(min: number, max: number): number {
+    return Math.floor(Math.random() * (max - min + 1)) + min
   }
 }

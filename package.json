@@ -23,6 +23,7 @@
     "generate:all": "node ace users:generate 20 3 && node ace spaces:generate",
     "setup:api": "node ace setup:api",
     "playlists:generate": "node ace playlists:generate",
+    "versus:generate": "node ace versus:generate",
     "favorites:generate": "node ace favorites:generate",
     "likes:generate": "node ace likes:generate",
     "delete:last": "node ace delete:last"

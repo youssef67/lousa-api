@@ -30,8 +30,8 @@ interface Music {
 }
 
 export default class PlaylistsGenerate extends BaseCommand {
-  static commandName = 'playlists:generate'
-  static description = 'gerate playlists for a specific user'
+  static commandName = 'versus:generate'
+  static description = 'gerate versus for a specific user'
 
   static options: CommandOptions = {
     startApp: true,
@@ -57,10 +57,6 @@ export default class PlaylistsGenerate extends BaseCommand {
         await this.cleanOldData()
       }
 
-      let data = await this.playlistsGenerate(this.streamer!)
-      await this.delay(this.getRandomInt(30000, 30500))
-
-      await this.generateTracks(data)
       await this.generateVersus(this.streamer!)
     } catch (error) {
       console.error(error)
@@ -77,164 +73,7 @@ export default class PlaylistsGenerate extends BaseCommand {
   }
 
   async cleanOldData() {
-    const viewers = await User.all()
-
-    for (const viewer of viewers) {
-      await viewer.related('favoritesPlaylists').detach()
-      await viewer.related('favoritesSpaceStreamers').detach()
-      await viewer.related('versusTracks').detach()
-    }
-
-    await Playlist.query().delete()
-    await Track.query().delete()
-    await PlaylistTrack.query().delete()
     await TracksVersus.query().delete()
-  }
-
-  async playlistsGenerate(email: string) {
-    const user = await User.query()
-      .whereLike('email', `%${email}%`)
-      .preload('spotifyUser', (sp) => {
-        sp.preload('spaceStreamer')
-      })
-      .first()
-
-    if (!user) {
-      throw new Error(`User with email streamer is not found`)
-    }
-
-    const newAccessToken = await user.spotifyUser.refreshAccessToken()
-
-    await db.transaction(async (trx) => {
-      user.spotifyUser.accessToken = newAccessToken.access_token
-      user.spotifyUser.tokenExpiresAt = DateTime.fromJSDate(new Date()).plus({
-        seconds: newAccessToken.expires_in,
-      })
-      user.spotifyUser.scope = newAccessToken.scope
-      user.spotifyUser.useTransaction(trx)
-      await user.spotifyUser.save()
-    })
-
-    const nbPlaylists = 3
-    const selectedPlaylists = await this.selectRandomPlaylists(playlistsList, nbPlaylists)
-
-    let playlistsCreated = []
-    for (const playlist of selectedPlaylists) {
-      const responseSpotify = await this.createPlaylistOnSpotify(
-        user.spotifyUser,
-        `${playlist.genre}-${user.spotifyUser.spaceStreamer.nameSpace}`
-      )
-
-      const newPlaylist = new Playlist()
-      await db.transaction(async (trx) => {
-        newPlaylist.playlistName = responseSpotify.name
-        newPlaylist.spotifyPlaylistId = responseSpotify.id
-        newPlaylist.spotifySnapShotId = responseSpotify.snapshot_id
-        newPlaylist.spaceStreamerId = user.spotifyUser.spaceStreamerId
-        newPlaylist.status = ModelStatus.Enabled
-        newPlaylist.useTransaction(trx)
-        await newPlaylist.save()
-      })
-
-      playlistsCreated.push(newPlaylist)
-    }
-
-    return { streamer: user, playlistsCreated: playlistsCreated }
-  }
-
-  async generateTracks(data: { streamer: User; playlistsCreated: Playlist[] }) {
-    const users = await User.query().whereLike('email', '%viewer%')
-    const usersIdsArray = users.map((item) => item.id)
-
-    for (const playlist of data.playlistsCreated) {
-      await this.delay(this.getRandomInt(30000, 30500))
-
-      const nbMusicsRanked = this.getRandomInt(5, 10)
-      const nbTotalMusics = nbMusicsRanked + Math.round((20 / 100) * nbMusicsRanked)
-      const genre = playlist.playlistName.split('-')[0]
-      const TracksSelected: Music[] = []
-      const TracksMeta: {
-        music: Music
-        foundTrack: any
-        isRanked: boolean
-        adjustedScore: number
-      }[] = []
-
-      let remaining = nbTotalMusics
-
-      while (remaining > 0) {
-        const selectedMusic = await this.selectRandomMusics(genre, 1, playlistsList)
-
-        if (TracksSelected.find((item) => item.title === selectedMusic[0].title)) {
-          continue
-        }
-
-        const foundTrack = await this.searchTrackOnSpotify(
-          data.streamer.spotifyUser.accessToken,
-          selectedMusic[0]
-        )
-        if (!foundTrack) continue
-
-        TracksSelected.push(selectedMusic[0])
-
-        const isRanked = TracksMeta.filter((t) => t.isRanked).length < nbMusicsRanked
-
-        TracksMeta.push({
-          music: selectedMusic[0],
-          foundTrack,
-          isRanked,
-          adjustedScore: 0, // on définit plus tard selon la position réelle
-        })
-
-        remaining--
-      }
-
-      // Trier les musiques ranked et attribuer une position + score fixe basé sur la position
-      const rankedTracks = TracksMeta.filter((t) => t.isRanked)
-      rankedTracks.forEach((track, index) => {
-        track.adjustedScore = 100 - index * 10 // ex: 100, 90, 80...
-      })
-
-      for (const trackMeta of TracksMeta) {
-        const { foundTrack, isRanked } = trackMeta
-
-        if (isRanked) {
-          const index = rankedTracks.findIndex((rt) => rt.foundTrack.id === foundTrack.id)
-          trackMeta.adjustedScore = 100 - index * 10
-        } else {
-          trackMeta.adjustedScore = 999 // valeur par défaut pour les non-ranked
-        }
-
-        if (isRanked) {
-          const newSnapshotId = await this.addTrackOnSpotify(
-            playlist,
-            foundTrack.id,
-            data.streamer.spotifyUser.accessToken
-          )
-
-          playlist.spotifySnapShotId = newSnapshotId
-        }
-
-        const randomUserId = usersIdsArray[this.getRandomInt(0, usersIdsArray.length - 1)]
-
-        await db.transaction(async (trx) => {
-          const track = await this.createOrGetTrack(foundTrack, trx)
-
-          const playlistTrack = new PlaylistTrack()
-          playlistTrack.playlistId = playlist.id
-          playlistTrack.trackId = track.id
-          playlistTrack.userId = randomUserId
-          playlistTrack.score = trackMeta.adjustedScore
-          playlistTrack.isRanked = isRanked
-          playlistTrack.position = isRanked
-            ? rankedTracks.findIndex((rt) => rt.foundTrack.id === foundTrack.id) + 1
-            : null
-          playlistTrack.status = isRanked ? TrackStatus.Active : TrackStatus.Inactive
-          playlistTrack.useTransaction(trx)
-          await playlistTrack.save()
-        })
-      }
-    }
   }
 
   async generateVersus(email: string) {
@@ -248,12 +87,14 @@ export default class PlaylistsGenerate extends BaseCommand {
       .preload('spotifyUser')
       .first()
 
-    if (!user) return
+    const viewerFour = await User.query().whereLike('email', '%viewer-4%').first()
+
+    if (!user || !viewerFour) return
 
     let createAtLeastOneTrackVersusForViewerFour = true
     for (const playlist of user.twitchUser.spaceStreamer.playlists) {
+      console.log('playlist id ', playlist.id)
       let nbTracksCreated = this.getRandomInt(5, 10)
-      let nbTotalTracksFixed = nbTracksCreated
       const genre = playlist.playlistName.split('-')[0]
 
       let TracksSelected: Music[] = []
@@ -299,7 +140,7 @@ export default class PlaylistsGenerate extends BaseCommand {
 
               const tracksVersus = await VersusService.createTracksVersusCommand(
                 trx,
-                playlist.id,
+                viewerFour.playlistSelected!,
                 lastCreatedTrack,
                 currentTrack,
                 firstUser!,
@@ -341,6 +182,7 @@ export default class PlaylistsGenerate extends BaseCommand {
             }
           }
 
+          if (lastCreatedTrack) createAtLeastOneTrackVersusForViewerFour = false
           lastCreatedTrack = currentTrack
           nbTracksCreated--
         })
@@ -360,23 +202,6 @@ export default class PlaylistsGenerate extends BaseCommand {
     }
 
     return playlist.musics.sort(() => 0.5 - Math.random()).slice(0, numberOfItems)
-  }
-
-  async createPlaylistOnSpotify(spotifyUser: SpotifyUser, playlistName: string) {
-    const createPlaylistOnSpotifyRequest = await axios.post(
-      `https://api.spotify.com/v1/users/${spotifyUser.spotifyId}/playlists`,
-      {
-        name: playlistName,
-      },
-      {
-        headers: {
-          'Authorization': `Bearer ${spotifyUser.accessToken}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    )
-
-    return createPlaylistOnSpotifyRequest.data
   }
 
   async searchTrackOnSpotify(accessToken: string, music: Music) {
@@ -424,29 +249,6 @@ export default class PlaylistsGenerate extends BaseCommand {
     })
 
     return addTrackRequest.data.snapshot_id
-  }
-
-  private async createOrGetTrack(foundTrack: any, trx?: TransactionClientContract) {
-    const existingTrack = await Track.query({ client: trx })
-      .where('spotify_track_id', foundTrack.id)
-      .first()
-
-    if (existingTrack) {
-      return existingTrack
-    }
-
-    const newTrack = new Track()
-    newTrack.spotifyTrackId = foundTrack.id ?? 'UNKNOWN_ID'
-    newTrack.trackName = foundTrack.name ?? 'Unknown Track'
-    newTrack.artistName = foundTrack.artists?.[0]?.name ?? 'Unknown Artist'
-    newTrack.album = foundTrack.album?.name ?? 'Unknown Album'
-    newTrack.cover = foundTrack.album?.images?.[0]?.url ?? ''
-    newTrack.url = foundTrack.external_urls?.spotify ?? ''
-
-    if (trx) newTrack.useTransaction(trx)
-    await newTrack.save()
-
-    return newTrack
   }
 
   async getRandomDurationHours(min = 2, max = 4): Promise<number> {

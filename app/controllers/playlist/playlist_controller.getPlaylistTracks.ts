@@ -12,7 +12,6 @@ const getPlaylistTracks = async ({ response, request, currentDevice }: HttpConte
   await currentDevice.load('user')
   const currentUser = currentDevice.user
 
-  console.log('currentUser', currentUser)
   // Get the playlist
   const playlist = await Playlist.query()
     .where('id', playlistId)
