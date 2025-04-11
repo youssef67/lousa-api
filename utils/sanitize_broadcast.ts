@@ -1,7 +1,11 @@
 import { UserSession } from '#interfaces/common_interface'
-import { BroadcasterTrack, BroadcasterVersus, VersusTrack } from '#interfaces/playlist_interface'
+import {
+  BroadcasterTrack,
+  BroadcasterVersus,
+  ScoreAndLikes,
+  VersusTrack,
+} from '#interfaces/playlist_interface'
 import { DateTime } from 'luxon'
-import { spec } from 'node:test/reporters'
 
 /**
  * Nettoie un objet PlaylistTrack pour qu'il soit compatible avec Transmit (Broadcastable)
@@ -30,32 +34,60 @@ export function sanitizePlaylistTrack(track: BroadcasterTrack) {
 /**
  * Nettoie un Versus pour broadcast (avec conversion de DateTime)
  */
-export function sanitizeTracksVersus(versus: BroadcasterVersus) {
-  const closingDate = DateTime.isDateTime(versus.closingDate)
-    ? versus.closingDate
-    : DateTime.fromISO(String(versus.closingDate))
+export function sanitizeTracksVersus(tracksVersus: BroadcasterVersus | null) {
+  let closingDateToISO: string | null = null
+
+  const rawDate = tracksVersus?.closingDate
+
+  if (rawDate) {
+    if (typeof rawDate === 'string') {
+      const dt = DateTime.fromISO(rawDate)
+      closingDateToISO = dt.isValid ? dt.toISO() : null
+    } else if (rawDate instanceof Date) {
+      const dt = DateTime.fromJSDate(rawDate)
+      closingDateToISO = dt.isValid ? dt.toISO() : null
+    } else if ('toISO' in rawDate && typeof rawDate.toISO === 'function') {
+      // Probablement déjà un DateTime Luxon
+      closingDateToISO = rawDate.toISO()
+    }
+  }
+
   return {
-    id: versus.id,
-    closingDate: closingDate.toISO(),
-    firstTrackScore: versus.firstTrackScore,
-    secondTrackScore: versus.secondTrackScore,
-    firstTrack: versus.firstTrack ? sanitizeVersusTrack(versus.firstTrack) : null,
-    secondTrack: versus.secondTrack ? sanitizeVersusTrack(versus.secondTrack) : null,
+    id: tracksVersus?.id ?? null,
+    closingDate: closingDateToISO,
+    firstTrack: sanitizeTrack(tracksVersus?.firstTrack ?? null),
+    secondTrack: sanitizeTrack(tracksVersus?.secondTrack ?? null),
   }
 }
 
-export function sanitizeScoreAndLikes(
-  tracksVersus: BroadcasterVersus
-): Record<string, number | boolean> {
+export function sanitizeTrack(track: VersusTrack | null) {
+  if (!track) return null
+
   return {
-    firstTrackScore: tracksVersus.firstTrackScore,
-    specialLikeFirstTrack: tracksVersus.specialLikeFirstTrack,
-    firstTrackAlreadyLiked: tracksVersus.firstTrack?.isLikedByUser || false,
-    secondTrackScore: tracksVersus.secondTrackScore,
-    specialLikeSecondTrack: tracksVersus.specialLikeSecondTrack,
-    secondTrackAlreadyLiked: tracksVersus.secondTrack?.isLikedByUser || false,
-    nbLikesFirstTrack: tracksVersus.firstTrack?.nbLikes || 0,
-    nbLikesSecondTrack: tracksVersus.secondTrack?.nbLikes || 0,
+    trackId: track.trackId,
+    spotifyTrackId: track.spotifyTrackId,
+    trackName: track.trackName,
+    artistName: track.artistName,
+    album: track.album,
+    cover: track.cover,
+    url: track.url,
+    scoreAndLikes: sanitizeScoreAndLikes(track.scoreAndLikes),
+    user: {
+      id: track.user.id,
+      userName: track.user.userName ?? null,
+      amountVirtualCurrency: track.user.amountVirtualCurrency,
+    },
+  }
+}
+
+export function sanitizeScoreAndLikes(score: ScoreAndLikes | null) {
+  if (!score) return null
+
+  return {
+    trackScore: score.trackScore,
+    alreadyLiked: score.alreadyLiked,
+    specialLike: score.specialLike,
+    nbLikes: score.nbLikes,
   }
 }
 

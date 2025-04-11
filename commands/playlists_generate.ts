@@ -61,7 +61,7 @@ export default class PlaylistsGenerate extends BaseCommand {
       await this.delay(this.getRandomInt(30000, 30500))
 
       await this.generateTracks(data)
-      await this.generateVersus(this.streamer!)
+      // await this.generateVersus(this.streamer!)
     } catch (error) {
       console.error(error)
       this.logger.error(`Failed to generate access: ${error.message}`)
@@ -146,11 +146,11 @@ export default class PlaylistsGenerate extends BaseCommand {
     const users = await User.query().whereLike('email', '%viewer%')
     const usersIdsArray = users.map((item) => item.id)
 
+    const nbLimitTracksByPlaylist = 6
     for (const playlist of data.playlistsCreated) {
       await this.delay(this.getRandomInt(30000, 30500))
 
-      const nbMusicsRanked = this.getRandomInt(5, 10)
-      const nbTotalMusics = nbMusicsRanked + Math.round((20 / 100) * nbMusicsRanked)
+      let nbMusicsToCreate = this.getRandomInt(5, 10)
       const genre = playlist.playlistName.split('-')[0]
       const TracksSelected: Music[] = []
       const TracksMeta: {
@@ -160,7 +160,7 @@ export default class PlaylistsGenerate extends BaseCommand {
         adjustedScore: number
       }[] = []
 
-      let remaining = nbTotalMusics
+      let remaining = nbMusicsToCreate
 
       while (remaining > 0) {
         const selectedMusic = await this.selectRandomMusics(genre, 1, playlistsList)
@@ -177,7 +177,7 @@ export default class PlaylistsGenerate extends BaseCommand {
 
         TracksSelected.push(selectedMusic[0])
 
-        const isRanked = TracksMeta.filter((t) => t.isRanked).length < nbMusicsRanked
+        const isRanked = remaining <= nbLimitTracksByPlaylist
 
         TracksMeta.push({
           music: selectedMusic[0],
@@ -191,6 +191,7 @@ export default class PlaylistsGenerate extends BaseCommand {
 
       // Trier les musiques ranked et attribuer une position + score fixe basé sur la position
       const rankedTracks = TracksMeta.filter((t) => t.isRanked)
+
       rankedTracks.forEach((track, index) => {
         track.adjustedScore = 100 - index * 10 // ex: 100, 90, 80...
       })
@@ -202,7 +203,7 @@ export default class PlaylistsGenerate extends BaseCommand {
           const index = rankedTracks.findIndex((rt) => rt.foundTrack.id === foundTrack.id)
           trackMeta.adjustedScore = 100 - index * 10
         } else {
-          trackMeta.adjustedScore = 999 // valeur par défaut pour les non-ranked
+          trackMeta.adjustedScore = 0 // valeur par défaut pour les non-ranked
         }
 
         if (isRanked) {
@@ -234,117 +235,6 @@ export default class PlaylistsGenerate extends BaseCommand {
           await playlistTrack.save()
         })
       }
-    }
-  }
-
-  async generateVersus(email: string) {
-    const user = await User.query()
-      .whereLike('email', `%${email}%`)
-      .preload('twitchUser', (twitchUserQuery) => {
-        twitchUserQuery.preload('spaceStreamer', (spaceStreamerQuery) => {
-          spaceStreamerQuery.preload('playlists')
-        })
-      })
-      .preload('spotifyUser')
-      .first()
-
-    if (!user) return
-
-    let createAtLeastOneTrackVersusForViewerFour = true
-    for (const playlist of user.twitchUser.spaceStreamer.playlists) {
-      let nbTracksCreated = this.getRandomInt(5, 10)
-      let nbTotalTracksFixed = nbTracksCreated
-      const genre = playlist.playlistName.split('-')[0]
-
-      let TracksSelected: Music[] = []
-      let lastCreatedTrack: Track | null = null
-
-      let attempts = 0
-      const maxAttempts = 30
-
-      do {
-        const selectedMusic = await this.selectRandomMusics(genre, 1, playlistsPending)
-        if (TracksSelected.find((item) => item.title === selectedMusic[0].title)) continue
-
-        const foundTrack = await this.searchTrackOnSpotify(
-          user.spotifyUser.accessToken,
-          selectedMusic[0]
-        )
-        if (!foundTrack) continue
-
-        TracksSelected.push(selectedMusic[0])
-
-        await db.transaction(async (trx) => {
-          const dataTrack: DataTrack = {
-            spotifyTrackId: foundTrack.id,
-            trackName: foundTrack.name,
-            artistName: foundTrack.artists?.[0]?.name,
-            album: foundTrack.album?.name,
-            cover: foundTrack.album?.images?.[0]?.url,
-            url: foundTrack.external_urls?.spotify,
-          }
-
-          const currentTrack = await TrackService.addTrack(dataTrack, trx)
-
-          if (lastCreatedTrack) {
-            if (createAtLeastOneTrackVersusForViewerFour) {
-              const firstUser = await User.query().whereLike('email', '%viewer-4%').first()
-
-              const secondUser = await User.query()
-                .whereLike('email', '%viewer%')
-                .whereNot('id', firstUser?.id!)
-                .orderByRaw('RANDOM()')
-                .limit(1)
-                .first()
-
-              const tracksVersus = await VersusService.createTracksVersusCommand(
-                trx,
-                playlist.id,
-                lastCreatedTrack,
-                currentTrack,
-                firstUser!,
-                secondUser!,
-                TracksVersusStatus.VotingProgress
-              )
-
-              await trx.insertQuery().table('tracks_versus_users').insert({
-                tracks_versus_id: tracksVersus.id,
-                user_id: firstUser?.id,
-              })
-
-              await trx.insertQuery().table('tracks_versus_users').insert({
-                tracks_versus_id: tracksVersus.id,
-                user_id: secondUser?.id,
-              })
-            } else {
-              const users = await User.query()
-                .whereLike('email', '%viewer%')
-                .orderByRaw('RANDOM()')
-                .limit(2)
-
-              const tracksVersus = await VersusService.createTracksVersusCommand(
-                trx,
-                playlist.id,
-                lastCreatedTrack,
-                currentTrack,
-                users[0],
-                users[1],
-                TracksVersusStatus.OnHold
-              )
-
-              for (const u of users) {
-                await trx.insertQuery().table('tracks_versus_users').insert({
-                  tracks_versus_id: tracksVersus.id,
-                  user_id: u.id,
-                })
-              }
-            }
-          }
-
-          lastCreatedTrack = currentTrack
-          nbTracksCreated--
-        })
-      } while (nbTracksCreated > 0 && attempts < maxAttempts)
     }
   }
 

@@ -1,39 +1,68 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { addPendingTrackValidator } from '#validators/playlist'
+import transmit from '@adonisjs/transmit/services/main'
 import ApiError from '#types/api_error'
 import Playlist from '#models/playlist'
 import db from '@adonisjs/lucid/services/db'
 import Track from '#models/track'
 import TrackService from '#services/track_service'
 import VersusService from '#services/versus_service'
+import JobsService from '#services/jobs_service'
+import { sanitizeTracksVersus } from '#utils/sanitize_broadcast'
+import TracksVersus from '#models/tracks_versus'
 
-const addPendingTrack = async ({ response, request, currentDevice }: HttpContext) => {
+const addPendingTrack = async ({ request, currentDevice }: HttpContext) => {
   const payload = await request.validateUsing(addPendingTrackValidator)
   await currentDevice.load('user')
+  const currentUser = currentDevice.user
 
-  const playlist = await Playlist.findBy('id', payload.playlistId)
+  console.log('pending controller')
+
+  const playlist = await Playlist.query()
+    .where('id', payload.playlistId)
+    .preload('playlistTracks', (playlistTracksQuery) => {
+      playlistTracksQuery.preload('track')
+    })
+    .first()
 
   if (!playlist) {
-    throw ApiError.newError('ERROR_INVALID_DATA', 'VCAT-1')
+    throw ApiError.newError('ERROR_INVALID_DATA', 'PCAPT-1')
   }
 
-  const trackExisting = await Track.findBy('spotify_track_id', payload.track.spotifyTrackId)
-
-  //Add track spotify data to the database
-  let track: Track
-  if (trackExisting) {
-    track = trackExisting
-  }
-
-  await db.transaction(async (trx) => {
-    if (!trackExisting) {
-      track = await TrackService.addTrack(payload.track, trx)
+  for (const playlistTrack of playlist!.playlistTracks) {
+    if (playlistTrack.track.spotifyTrackId === payload.track.spotifyTrackId) {
+      console.log('track already exists')
+      throw ApiError.newError('ERROR_INVALID_DATA', 'PCAPT-2')
     }
+  }
 
-    await VersusService.setActionVersus(track, playlist.id, trx)
+  // Add track spotify data to the database
+  let track: Track
+  let newTracksVersus: TracksVersus = {} as TracksVersus
+  await db.transaction(async (trx) => {
+    track = await TrackService.addTrack(payload.track, trx)
+    newTracksVersus = await VersusService.createOrUpdateTracksVersus(
+      track,
+      playlist.id,
+      currentUser.id,
+      trx
+    )
+
+    await newTracksVersus.load('firstTrack')
+    await newTracksVersus.load('secondTrack')
+    await newTracksVersus.load('likeTracks')
+
+    if (newTracksVersus.closingDate) {
+      await JobsService.setRegisterWinnerJob(newTracksVersus.id, trx)
+    }
   })
 
-  return response.ok({ result: true })
+  const currentTracksVersus = await VersusService.tracksVersusBroadcasted(newTracksVersus, null)
+
+  console.log('currentTracksVersus', currentTracksVersus)
+  transmit.broadcast(`playlist/tracksVersus/${newTracksVersus.playlistId}`, {
+    currentTracksVersus: sanitizeTracksVersus(currentTracksVersus),
+  })
 }
 
 export default addPendingTrack

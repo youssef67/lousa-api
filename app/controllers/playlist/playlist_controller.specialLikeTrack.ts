@@ -2,12 +2,10 @@ import type { HttpContext } from '@adonisjs/core/http'
 import { SpecialLikeTrackValidator } from '#validators/playlist'
 import ApiError from '#types/api_error'
 import transmit from '@adonisjs/transmit/services/main'
-import { sanitizeScoreAndLikes, sanitizeUser } from '#utils/sanitize_broadcast'
+import { sanitizeTracksVersus } from '#utils/sanitize_broadcast'
 import db from '@adonisjs/lucid/services/db'
 import VersusService from '#services/versus_service'
 import TracksVersus from '#models/tracks_versus'
-import { BroadcasterVersus } from '#interfaces/playlist_interface'
-import User from '#models/user'
 
 const specialLikeTrack = async ({ request, currentDevice }: HttpContext) => {
   const payload = await request.validateUsing(SpecialLikeTrackValidator)
@@ -20,31 +18,37 @@ const specialLikeTrack = async ({ request, currentDevice }: HttpContext) => {
     throw ApiError.newError('ERROR_INVALID_DATA', 'PCSL-2')
   }
 
-  let TracksVersusUpdated: BroadcasterVersus | null = null
-  let UserUpdated: User | null = null
+  let tracksVersusUpdated: TracksVersus | null = null
+
   await db.transaction(async (trx) => {
-    UserUpdated = await VersusService.SpecialLikeTrack(
-      tracksVersusExisting,
+    await VersusService.SpecialLikeTrack(
+      payload.tracksVersusId,
       currentUser,
       payload.targetTrack,
       payload.amount,
       trx
     )
 
-    TracksVersusUpdated = await VersusService.getTracksVersusBroadcasted(
-      tracksVersusExisting.playlistId,
-      currentUser.id,
-      trx
+    tracksVersusUpdated = await TracksVersus.query({ client: trx })
+      .where('id', payload.tracksVersusId)
+      .preload('firstTrack')
+      .preload('secondTrack')
+      .preload('likeTracks')
+      .first()
+  })
+
+  if (tracksVersusUpdated as unknown as TracksVersus) {
+    const currentTracksVersus = await VersusService.tracksVersusBroadcasted(
+      tracksVersusUpdated,
+      currentUser.id
     )
-  })
 
-  const scoreAndLikes = TracksVersusUpdated ? sanitizeScoreAndLikes(TracksVersusUpdated) : null
-  const user = UserUpdated ? sanitizeUser(UserUpdated) : null
-
-  transmit.broadcast(`playlist/like/${payload.tracksVersusId}`, {
-    scoreAndLikes,
-    user,
-  })
+    transmit.broadcast(`playlist/like/${tracksVersusUpdated!.playlistId}`, {
+      currentTracksVersus: sanitizeTracksVersus(currentTracksVersus),
+    })
+  } else {
+    throw ApiError.newError('ERROR_INVALID_DATA', 'PCLA-2')
+  }
 }
 
 export default specialLikeTrack

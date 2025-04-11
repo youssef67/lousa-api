@@ -10,7 +10,6 @@ export const addPendingTrackValidator = vine.compile(
   vine.object({
     playlistId: vine.string(),
     track: vine.object({
-      trackId: vine.string(),
       spotifyTrackId: vine.string(),
       trackName: vine.string(),
       artistName: vine.string(),

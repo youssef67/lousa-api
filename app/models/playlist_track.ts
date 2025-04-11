@@ -4,6 +4,7 @@ import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import { TrackStatus } from '#types/track_status'
 import { PlaylistTrackSerialized } from '#interfaces/playlist_interface'
 import User from './user.js'
+import Track from './track.js'
 
 export default class PlaylistTrack extends BaseModel {
   @column({ isPrimary: true })
@@ -40,6 +41,11 @@ export default class PlaylistTrack extends BaseModel {
     foreignKey: 'userId',
   })
   declare user: BelongsTo<typeof User>
+
+  @belongsTo(() => Track, {
+    foreignKey: 'trackId',
+  })
+  declare track: BelongsTo<typeof Track>
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime

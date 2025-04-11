@@ -21,7 +21,7 @@ export default class PlaylistService {
     options: AddTrackOptions,
     trx: TransactionClientContract
   ): Promise<PlaylistTrack[]> {
-    const { playlistId, trackId, userId, score, specialScore, maxTracks = 20 } = options
+    const { playlistId, trackId, userId, score, specialScore, maxTracks = 8 } = options
 
     // 1. Ajouter la track gagnante
     const newTrack = new PlaylistTrack()
@@ -55,7 +55,12 @@ export default class PlaylistService {
       i++
     }
 
-    await Promise.all(tracksToKeep.map((t) => t.save()))
+    await Promise.all(
+      tracksToKeep.map((t) => {
+        t.useTransaction(trx)
+        t.save()
+      })
+    )
 
     // 5. Déclasser les autres (désactiver)
     for (const track of tracksToRemove) {
@@ -65,7 +70,12 @@ export default class PlaylistService {
       track.useTransaction(trx)
     }
 
-    await Promise.all(tracksToRemove.map((t) => t.save()))
+    await Promise.all(
+      tracksToRemove.map((t) => {
+        t.useTransaction(trx)
+        t.save()
+      })
+    )
 
     return tracksToKeep
   }

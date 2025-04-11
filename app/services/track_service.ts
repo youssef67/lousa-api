@@ -4,16 +4,24 @@ import { TransactionClientContract } from '@adonisjs/lucid/types/database'
 
 export default class TrackService {
   static async addTrack(track: DataTrack, trx: TransactionClientContract): Promise<Track> {
-    const newTrack = new Track()
-    newTrack.spotifyTrackId = track.spotifyTrackId
-    newTrack.trackName = track.trackName
-    newTrack.artistName = track.artistName
-    newTrack.album = track.album
-    newTrack.cover = track.cover
-    newTrack.url = track.url
-    newTrack.useTransaction(trx)
-    await newTrack.save()
+    const existingTrack = await Track.query({ client: trx })
+      .where('spotify_track_id', track.spotifyTrackId)
+      .first()
 
-    return newTrack
+    if (existingTrack) {
+      return existingTrack
+    } else {
+      const newTrack = new Track()
+      newTrack.spotifyTrackId = track.spotifyTrackId
+      newTrack.trackName = track.trackName
+      newTrack.artistName = track.artistName
+      newTrack.album = track.album
+      newTrack.cover = track.cover
+      newTrack.url = track.url
+      newTrack.useTransaction(trx)
+      await newTrack.save()
+
+      return newTrack
+    }
   }
 }

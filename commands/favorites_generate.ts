@@ -16,7 +16,8 @@ export default class FavoritesGenerate extends BaseCommand {
       this.logger.info(`Generating favorites...`)
 
       await this.cleanOldData()
-      await this.createViewerProfile()
+      await this.createViewerFour()
+      // await this.createViewerProfile()
     } catch (error) {
       console.error(error) // Log the full error
       this.logger.error(`Failed to generate users: ${error.message}`)
@@ -43,7 +44,10 @@ export default class FavoritesGenerate extends BaseCommand {
       throw new Error(`User not found`)
     }
 
-    const spaceStreamers = await SpaceStreamer.query().whereNotNull('twitch_user_id')
+    const spaceStreamers = await SpaceStreamer.query()
+      .whereNotNull('twitch_user_id')
+      .has('playlists')
+      .preload('playlists')
 
     const nbToPick = this.getRandomInt(1, spaceStreamers.length)
     const spaceStreamersRandom = await this.getRandomElements(spaceStreamers, nbToPick)
@@ -60,13 +64,10 @@ export default class FavoritesGenerate extends BaseCommand {
 
       for (const playlist of playlistsRandom) {
         if (!viewerFour.playlistSelected) {
-          const randomPlaylist = playlistsRandom[Math.floor(Math.random() * playlistsRandom.length)]
-
           await User.query().where('id', viewerFour.id).update({
-            playlistSelected: randomPlaylist.id,
+            playlistSelected: playlist.id,
           })
         }
-
         await viewerFour.related('favoritesPlaylists').attach([playlist.id])
       }
     }
@@ -77,6 +78,7 @@ export default class FavoritesGenerate extends BaseCommand {
 
     const viewers = await User.query()
       .whereLike('email', '%viewer%')
+      .whereRaw('email NOT LIKE ?', ['%viewer-4%'])
       .orderByRaw('RANDOM()')
       .limit(nbViewers)
 
@@ -116,7 +118,7 @@ export default class FavoritesGenerate extends BaseCommand {
     }
   }
 
-  async getRandomElements(arr: any[], count: number) {
+  async getRandomElements(arr: any[], count: number): Promise<SpaceStreamer[]> {
     const shuffled = [...arr].sort(() => 0.5 - Math.random()) // on mélange
     return shuffled.slice(0, count) // on prend les n premiers
   }

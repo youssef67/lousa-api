@@ -1,5 +1,6 @@
 import { DateTime } from 'luxon'
 import { UserSession } from './common_interface.js'
+import TracksVersus from '#models/tracks_versus'
 
 export interface VersusTracksSession {
   id: string
@@ -34,11 +35,16 @@ export interface DataTrack {
 }
 
 export interface WinnerTrack {
-  trackId: string | null
+  tracksVersusId: string
+  trackId: string
   userId: string
   score: number
   specialScore: number
-  spotifyTrackId: string
+}
+
+export interface RegisterWinnerResult {
+  winnerTrack: WinnerTrack
+  nextTracksVersus: TracksVersus | null
 }
 
 export interface BroadcasterTrack {
@@ -58,25 +64,17 @@ export interface BroadcasterTrack {
 }
 
 export interface BroadcasterVersus {
-  id: string
-  closingDate: DateTime
-  firstTrackScore: number
-  specialLikeFirstTrack: number
-  secondTrackScore: number
-  specialLikeSecondTrack: number
+  id: string | null
+  closingDate: DateTime | null
   firstTrack: VersusTrack | null
   secondTrack: VersusTrack | null
 }
 
 export interface ScoreAndLikes {
-  firstTrackScore: number
-  firstTrackAlreadyLiked: boolean
-  specialLikeFirstTrack: number
-  secondTrackScore: number
-  secondTrackAlreadyLiked: boolean
-  specialLikeSecondTrack: number
-  nbLikesFirstTrack: number
-  nbLikesSecondTrack: number
+  trackScore: number | null
+  alreadyLiked: boolean
+  specialLike: number | null
+  nbLikes: number
 }
 
 export interface VersusTrack {
@@ -87,11 +85,11 @@ export interface VersusTrack {
   album: string
   cover: string
   url: string
-  nbLikes: number
-  isLikedByUser: boolean
+  scoreAndLikes: ScoreAndLikes | null
   user: {
     id: string
     userName?: string | null
+    amountVirtualCurrency: number
   }
 }
 

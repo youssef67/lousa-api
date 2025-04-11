@@ -38,13 +38,13 @@ export default class TracksVersus extends BaseModel {
   declare specialLikeSecondTrack: number
 
   @column()
-  declare closingDate: DateTime
+  declare closingDate: DateTime | null
 
   @column()
   declare trackWinner: string | null
 
   @column()
-  declare UserWinner: string | null
+  declare userWinner: string | null
 
   @column()
   declare status: TracksVersusStatus

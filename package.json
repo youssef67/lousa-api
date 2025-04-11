@@ -27,7 +27,6 @@
     "favorites:generate": "node ace favorites:generate",
     "likes:generate": "node ace likes:generate",
     "delete:last": "node ace delete:last"
-
   },
   "imports": {
     "#controllers/*": "./app/controllers/*.js",
@@ -79,9 +78,12 @@
     "@adonisjs/http-server": "^7.4.0",
     "@adonisjs/lucid": "^21.3.0",
     "@adonisjs/mail": "^9.2.2",
+    "@adonisjs/redis": "^9.2.0",
     "@adonisjs/transmit": "^2.0.2",
+    "@rlanz/bull-queue": "^3.1.0",
     "@vinejs/vine": "^2.1.0",
     "axios": "^1.7.9",
+    "bullmq": "^5.47.1",
     "cookie-signature": "^1.2.2",
     "edge.js": "^6.2.0",
     "luxon": "^3.5.0",

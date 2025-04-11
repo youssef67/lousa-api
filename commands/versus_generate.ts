@@ -1,21 +1,16 @@
-import { playlistsList } from '#data/playlists'
 import { playlistsPending } from '#data/playlists_pending'
 import { DataTrack } from '#interfaces/playlist_interface'
 import Playlist from '#models/playlist'
-import PlaylistTrack from '#models/playlist_track'
-import SpotifyUser from '#models/spotify_user'
 import Track from '#models/track'
 import TracksVersus from '#models/tracks_versus'
 import User from '#models/user'
+import JobsService from '#services/jobs_service'
 import TrackService from '#services/track_service'
 import VersusService from '#services/versus_service'
-import { ModelStatus } from '#types/model_status'
-import { TrackStatus } from '#types/track_status'
 import { TracksVersusStatus } from '#types/versus.status'
 import { args, BaseCommand } from '@adonisjs/core/ace'
 import type { CommandOptions } from '@adonisjs/core/types/ace'
 import db from '@adonisjs/lucid/services/db'
-import { TransactionClientContract } from '@adonisjs/lucid/types/database'
 import axios from 'axios'
 import { DateTime } from 'luxon'
 
@@ -31,14 +26,14 @@ interface Music {
 
 export default class PlaylistsGenerate extends BaseCommand {
   static commandName = 'versus:generate'
-  static description = 'gerate versus for a specific user'
+  static description = 'generate versuses for a specific streamer'
 
   static options: CommandOptions = {
     startApp: true,
   }
 
   @args.string({
-    description: 'streamer who will generate the playlists',
+    description: "streamer' playlists who will generate versuses",
     required: true,
   })
   declare streamer?: string
@@ -51,7 +46,7 @@ export default class PlaylistsGenerate extends BaseCommand {
 
   async run() {
     try {
-      this.logger.info(`generate playlists...`)
+      this.logger.info(`generate versuses...`)
 
       if (this.cleanData === 'true') {
         await this.cleanOldData()
@@ -59,17 +54,12 @@ export default class PlaylistsGenerate extends BaseCommand {
 
       await this.generateVersus(this.streamer!)
     } catch (error) {
-      console.error(error)
       this.logger.error(`Failed to generate access: ${error.message}`)
     }
   }
 
   private getRandomInt(min: number, max: number): number {
     return Math.floor(Math.random() * (max - min + 1)) + min
-  }
-
-  private async delay(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms))
   }
 
   async cleanOldData() {
@@ -88,13 +78,27 @@ export default class PlaylistsGenerate extends BaseCommand {
       .first()
 
     const viewerFour = await User.query().whereLike('email', '%viewer-4%').first()
+    let viewerUsed: User[] = []
 
-    if (!user || !viewerFour) return
+    // if (!user || !viewerFour) return
 
-    let createAtLeastOneTrackVersusForViewerFour = true
+    if (!user) return
+
+    // let createAtLeastOneTrackVersusForViewerFour = true
     for (const playlist of user.twitchUser.spaceStreamer.playlists) {
-      console.log('playlist id ', playlist.id)
-      let nbTracksCreated = this.getRandomInt(5, 10)
+      const newAccessToken = await user.spotifyUser.refreshAccessToken()
+
+      await db.transaction(async (trx) => {
+        user.spotifyUser.accessToken = newAccessToken.access_token
+        user.spotifyUser.tokenExpiresAt = DateTime.fromJSDate(new Date()).plus({
+          seconds: newAccessToken.expires_in,
+        })
+        user.spotifyUser.scope = newAccessToken.scope
+        user.spotifyUser.useTransaction(trx)
+        await user.spotifyUser.save()
+      })
+
+      let nbTracksCreated = this.getRandomInt(2, 4)
       const genre = playlist.playlistName.split('-')[0]
 
       let TracksSelected: Music[] = []
@@ -102,8 +106,11 @@ export default class PlaylistsGenerate extends BaseCommand {
 
       let attempts = 0
       const maxAttempts = 30
+      let trackVersusStatus = TracksVersusStatus.VotingProgress
 
+      let trackAlreadyExists: boolean
       do {
+        trackAlreadyExists = false
         const selectedMusic = await this.selectRandomMusics(genre, 1, playlistsPending)
         if (TracksSelected.find((item) => item.title === selectedMusic[0].title)) continue
 
@@ -111,6 +118,7 @@ export default class PlaylistsGenerate extends BaseCommand {
           user.spotifyUser.accessToken,
           selectedMusic[0]
         )
+
         if (!foundTrack) continue
 
         TracksSelected.push(selectedMusic[0])
@@ -128,50 +136,25 @@ export default class PlaylistsGenerate extends BaseCommand {
           const currentTrack = await TrackService.addTrack(dataTrack, trx)
 
           if (lastCreatedTrack) {
-            if (createAtLeastOneTrackVersusForViewerFour) {
-              const firstUser = await User.query().whereLike('email', '%viewer-4%').first()
+            const users = await User.query()
+              .whereLike('email', '%viewer%')
+              .orderByRaw('RANDOM()')
+              .limit(2)
 
-              const secondUser = await User.query()
-                .whereLike('email', '%viewer%')
-                .whereNot('id', firstUser?.id!)
-                .orderByRaw('RANDOM()')
-                .limit(1)
-                .first()
+            viewerUsed = [...viewerUsed, ...users]
 
-              const tracksVersus = await VersusService.createTracksVersusCommand(
-                trx,
-                viewerFour.playlistSelected!,
-                lastCreatedTrack,
-                currentTrack,
-                firstUser!,
-                secondUser!,
-                TracksVersusStatus.VotingProgress
-              )
+            const tracksVersus = await VersusService.createTracksVersusCommand(
+              trx,
+              playlist.id,
+              lastCreatedTrack,
+              currentTrack,
+              users[0],
+              users[1],
+              trackVersusStatus
+            )
 
-              await trx.insertQuery().table('tracks_versus_users').insert({
-                tracks_versus_id: tracksVersus.id,
-                user_id: firstUser?.id,
-              })
-
-              await trx.insertQuery().table('tracks_versus_users').insert({
-                tracks_versus_id: tracksVersus.id,
-                user_id: secondUser?.id,
-              })
-            } else {
-              const users = await User.query()
-                .whereLike('email', '%viewer%')
-                .orderByRaw('RANDOM()')
-                .limit(2)
-
-              const tracksVersus = await VersusService.createTracksVersusCommand(
-                trx,
-                playlist.id,
-                lastCreatedTrack,
-                currentTrack,
-                users[0],
-                users[1],
-                TracksVersusStatus.OnHold
-              )
+            if (tracksVersus) {
+              trackVersusStatus = TracksVersusStatus.OnHold
 
               for (const u of users) {
                 await trx.insertQuery().table('tracks_versus_users').insert({
@@ -179,14 +162,36 @@ export default class PlaylistsGenerate extends BaseCommand {
                   user_id: u.id,
                 })
               }
+            } else {
+              trackAlreadyExists = true
             }
           }
 
-          if (lastCreatedTrack) createAtLeastOneTrackVersusForViewerFour = false
-          lastCreatedTrack = currentTrack
-          nbTracksCreated--
+          if (!trackAlreadyExists) {
+            lastCreatedTrack = currentTrack
+            nbTracksCreated--
+          }
         })
       } while (nbTracksCreated > 0 && attempts < maxAttempts)
+    }
+
+    if (!viewerFour) return
+
+    const trackVersusTarget = await TracksVersus.query()
+      .where('status', TracksVersusStatus.VotingProgress)
+      .first()
+
+    if (trackVersusTarget) {
+      await db.transaction(async (trx) => {
+        trackVersusTarget.useTransaction(trx)
+        viewerFour.useTransaction(trx)
+
+        trackVersusTarget.firstTrackUser = viewerFour.id
+        viewerFour.playlistSelected = trackVersusTarget.playlistId
+
+        await trackVersusTarget.save()
+        await viewerFour.save()
+      })
     }
   }
 

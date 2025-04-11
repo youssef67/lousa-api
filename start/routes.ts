@@ -95,11 +95,12 @@ router
         router
           .group(() => {
             router.get('track/search', [PlaylistController, 'searchTrack'])
-            router.post('track/add', [PlaylistController, 'addTrack'])
+            router.get('track/add', [PlaylistController, 'addTrack'])
             router.post('pending/track/add', [PlaylistController, 'addPendingTrack'])
             router.post('track/like', [PlaylistController, 'likeTrack'])
             router.post('track/special/like', [PlaylistController, 'specialLikeTrack'])
             router.get('', [PlaylistController, 'getPlaylistTracks'])
+            router.get('tracksVersus', [PlaylistController, 'getTracksVersus'])
           })
           .use(middleware.authApiToken())
       })

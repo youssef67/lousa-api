@@ -20,7 +20,7 @@ export default class extends BaseSchema {
       table.integer('special_like_second_track').notNullable().defaultTo(0)
       table.uuid('first_track_user').nullable()
       table.uuid('second_track_user').nullable()
-      table.timestamp('closing_date')
+      table.timestamp('closing_date').nullable().defaultTo(null)
       table.uuid('track_winner').nullable()
       table.uuid('user_winner').nullable()
       table.string('status').notNullable().defaultTo('on_hold')
