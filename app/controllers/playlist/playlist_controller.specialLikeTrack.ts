@@ -6,8 +6,10 @@ import { sanitizeTracksVersus } from '#utils/sanitize_broadcast'
 import db from '@adonisjs/lucid/services/db'
 import VersusService from '#services/versus_service'
 import TracksVersus from '#models/tracks_versus'
+import User from '#models/user'
+import { Broadcastable } from '#types/broadcastable'
 
-const specialLikeTrack = async ({ request, currentDevice }: HttpContext) => {
+const specialLikeTrack = async ({ response, request, currentDevice }: HttpContext) => {
   const payload = await request.validateUsing(SpecialLikeTrackValidator)
   await currentDevice.load('user')
   const currentUser = currentDevice.user
@@ -19,7 +21,6 @@ const specialLikeTrack = async ({ request, currentDevice }: HttpContext) => {
   }
 
   let tracksVersusUpdated: TracksVersus | null = null
-
   await db.transaction(async (trx) => {
     await VersusService.SpecialLikeTrack(
       payload.tracksVersusId,
@@ -46,6 +47,8 @@ const specialLikeTrack = async ({ request, currentDevice }: HttpContext) => {
     transmit.broadcast(`playlist/like/${tracksVersusUpdated!.playlistId}`, {
       currentTracksVersus: sanitizeTracksVersus(currentTracksVersus),
     })
+
+    return response.ok({ user: currentUser.serializeAsSession() })
   } else {
     throw ApiError.newError('ERROR_INVALID_DATA', 'PCLA-2')
   }

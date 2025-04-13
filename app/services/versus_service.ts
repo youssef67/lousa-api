@@ -36,7 +36,7 @@ export default class VersusService {
   ): Promise<TracksVersus> {
     let lastVersusRecorded: TracksVersus | null = null
 
-    // On recupère le dernier tracksVersus enregistré
+    // On recupère le tracksVersus enregistré le plus ancien
     lastVersusRecorded = await TracksVersus.query()
       .where('playlist_id', playlistId)
       .orderBy('created_at', 'desc')
@@ -49,10 +49,19 @@ export default class VersusService {
         throw ApiError.newError('ERROR_INVALID_DATA', 'SVTCUCT-1')
       }
 
+      const existingActiveVersus = await TracksVersus.query()
+        .where('playlist_id', playlistId)
+        .whereIn('status', [TracksVersusStatus.VotingProgress, TracksVersusStatus.OnHold])
+        .first()
+
       lastVersusRecorded.secondTrackId = track.id
       lastVersusRecorded.secondTrackUser = userId
-      lastVersusRecorded.status = TracksVersusStatus.OnHold
-      lastVersusRecorded.closingDate = DateTime.now().plus({ seconds: 45 })
+      lastVersusRecorded.status = existingActiveVersus
+        ? TracksVersusStatus.OnHold
+        : TracksVersusStatus.VotingProgress
+      lastVersusRecorded.closingDate = existingActiveVersus
+        ? null
+        : DateTime.now().plus({ hours: 15 })
       lastVersusRecorded.useTransaction(trx)
       await lastVersusRecorded.save()
       // Le dernier tracksVersus n'existe pas ou a un statut indiquant qu'il est soit en cours de votes, soit en attente, soit terminé
@@ -80,36 +89,33 @@ export default class VersusService {
     if (!tracksVersus) {
       return {} as BroadcasterVersus
     }
+
     // Chargement des users liés
     const [firstUser, secondUser] = await Promise.all([
       tracksVersus?.firstTrackUser ? User.findBy('id', tracksVersus.firstTrackUser) : null,
       tracksVersus?.secondTrackUser ? User.findBy('id', tracksVersus.secondTrackUser) : null,
     ])
 
-    let nbLikesOfFirstTrack: LikeTrack[] = []
-    let nbLikesOfSecondTrack: LikeTrack[] = []
-    let firstTrackIsLikedByUser = false
-    let secondTrackIsLikedByUser = false
+    let nbLikesUserIdOfFirstTrack: string[] = []
+    let nbLikesUserIdOfSecondTrack: string[] = []
     if (tracksVersus?.likeTracks && userId) {
-      nbLikesOfFirstTrack = tracksVersus.likeTracks.filter(
+      const nbLikesOfFirstTrack = tracksVersus.likeTracks.filter(
         (like) => like.trackId === tracksVersus.firstTrackId
       )
 
-      console.log('nbLikesOfFirstTrack', nbLikesOfFirstTrack)
-      firstTrackIsLikedByUser = nbLikesOfFirstTrack.some((like) => like.userId === userId)
+      nbLikesUserIdOfFirstTrack = nbLikesOfFirstTrack.map((like) => like.userId)
 
-      nbLikesOfSecondTrack = tracksVersus.likeTracks.filter(
+      const nbLikesOfSecondTrack = tracksVersus.likeTracks.filter(
         (like) => like.trackId === tracksVersus.secondTrackId
       )
 
-      secondTrackIsLikedByUser = nbLikesOfSecondTrack.some((like) => like.userId === userId)
+      nbLikesUserIdOfSecondTrack = nbLikesOfSecondTrack.map((like) => like.userId)
     }
 
     const mapTrack = (
       track: Track | null,
       user: User | null,
-      nbLikes: number,
-      isLikedByUser: boolean,
+      userIdList: string[],
       score: number,
       specialLike: number
     ): BroadcasterVersus['firstTrack'] => {
@@ -125,9 +131,8 @@ export default class VersusService {
         url: track.url,
         scoreAndLikes: {
           trackScore: score,
-          alreadyLiked: isLikedByUser,
           specialLike: specialLike,
-          nbLikes: nbLikes,
+          listOfUserIdWhoLiked: userIdList,
         },
         user: {
           id: user?.id ?? 'unknown',
@@ -144,8 +149,7 @@ export default class VersusService {
         ? mapTrack(
             tracksVersus.firstTrack,
             firstUser,
-            nbLikesOfFirstTrack.length,
-            firstTrackIsLikedByUser,
+            nbLikesUserIdOfFirstTrack,
             tracksVersus.firstTrackScore,
             tracksVersus.specialLikeFirstTrack
           )
@@ -154,35 +158,35 @@ export default class VersusService {
         ? mapTrack(
             tracksVersus.secondTrack,
             secondUser,
-            nbLikesOfSecondTrack.length,
-            secondTrackIsLikedByUser,
+            nbLikesUserIdOfSecondTrack,
             tracksVersus.secondTrackScore,
             tracksVersus.specialLikeSecondTrack
           )
         : null,
+      isComplete: tracksVersus?.secondTrack !== null,
     }
 
     return tracksVersusBroadcasted
   }
 
-  static async activationTracksVersus(playlistId: string): Promise<TracksVersus | null> {
-    const tracksVersusToBeActivated = await TracksVersus.query()
+  static async activationTracksVersus(
+    playlistId: string,
+    trx: TransactionClientContract
+  ): Promise<void> {
+    const tracksVersusToBeActivated = await TracksVersus.query({ client: trx })
       .where('playlist_id', playlistId)
       .andWhere('status', TracksVersusStatus.OnHold)
       .preload('firstTrack')
       .preload('secondTrack')
+      .orderBy('created_at', 'asc')
       .first()
 
     if (tracksVersusToBeActivated) {
-      await db.transaction(async (trx) => {
-        tracksVersusToBeActivated.status = TracksVersusStatus.VotingProgress
-        tracksVersusToBeActivated.closingDate = DateTime.now().plus({ seconds: 45 })
-        tracksVersusToBeActivated.useTransaction(trx)
-        await tracksVersusToBeActivated.save()
-      })
+      tracksVersusToBeActivated.status = TracksVersusStatus.VotingProgress
+      tracksVersusToBeActivated.closingDate = DateTime.now().plus({ hours: 15 })
+      tracksVersusToBeActivated.useTransaction(trx)
+      await tracksVersusToBeActivated.save()
     }
-
-    return tracksVersusToBeActivated
   }
 
   static async registerWinner(
@@ -227,7 +231,7 @@ export default class VersusService {
 
     if (nextTracksVersus) {
       nextTracksVersus.status = TracksVersusStatus.VotingProgress
-      nextTracksVersus.closingDate = DateTime.now().plus({ seconds: 45 })
+      nextTracksVersus.closingDate = DateTime.now().plus({ hours: 15 })
       nextTracksVersus.useTransaction(trx)
       await nextTracksVersus.save()
     }
@@ -498,7 +502,7 @@ export default class VersusService {
       newVersus.secondTrackUser = secondUser.id
       newVersus.status = status
       newVersus.closingDate =
-        status === TracksVersusStatus.VotingProgress ? DateTime.now().plus({ seconds: 45 }) : null
+        status === TracksVersusStatus.VotingProgress ? DateTime.now().plus({ hours: 15 }) : null
       newVersus.useTransaction(trx)
       await newVersus.save()
 

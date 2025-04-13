@@ -10,13 +10,12 @@ import VersusService from '#services/versus_service'
 import JobsService from '#services/jobs_service'
 import { sanitizeTracksVersus } from '#utils/sanitize_broadcast'
 import TracksVersus from '#models/tracks_versus'
+import { TracksVersusStatus } from '#types/versus.status'
 
-const addPendingTrack = async ({ request, currentDevice }: HttpContext) => {
+const addPendingTrack = async ({ response, request, currentDevice }: HttpContext) => {
   const payload = await request.validateUsing(addPendingTrackValidator)
   await currentDevice.load('user')
   const currentUser = currentDevice.user
-
-  console.log('pending controller')
 
   const playlist = await Playlist.query()
     .where('id', payload.playlistId)
@@ -31,38 +30,72 @@ const addPendingTrack = async ({ request, currentDevice }: HttpContext) => {
 
   for (const playlistTrack of playlist!.playlistTracks) {
     if (playlistTrack.track.spotifyTrackId === payload.track.spotifyTrackId) {
-      console.log('track already exists')
       throw ApiError.newError('ERROR_INVALID_DATA', 'PCAPT-2')
     }
   }
 
   // Add track spotify data to the database
   let track: Track
-  let newTracksVersus: TracksVersus = {} as TracksVersus
+  let tracksVersusCreatedOrUpdated: TracksVersus = {} as TracksVersus
   await db.transaction(async (trx) => {
     track = await TrackService.addTrack(payload.track, trx)
-    newTracksVersus = await VersusService.createOrUpdateTracksVersus(
+    tracksVersusCreatedOrUpdated = await VersusService.createOrUpdateTracksVersus(
       track,
       playlist.id,
       currentUser.id,
       trx
     )
 
-    await newTracksVersus.load('firstTrack')
-    await newTracksVersus.load('secondTrack')
-    await newTracksVersus.load('likeTracks')
-
-    if (newTracksVersus.closingDate) {
-      await JobsService.setRegisterWinnerJob(newTracksVersus.id, trx)
+    if (tracksVersusCreatedOrUpdated.closingDate) {
+      await JobsService.setRegisterWinnerJob(tracksVersusCreatedOrUpdated.id, trx)
     }
   })
 
-  const currentTracksVersus = await VersusService.tracksVersusBroadcasted(newTracksVersus, null)
+  if (tracksVersusCreatedOrUpdated.status === TracksVersusStatus.VotingProgress) {
+    const tracksVersus = await TracksVersus.query()
+      .where('id', tracksVersusCreatedOrUpdated.id)
+      .preload('firstTrack')
+      .preload('secondTrack')
+      .preload('likeTracks')
+      .first()
 
-  console.log('currentTracksVersus', currentTracksVersus)
-  transmit.broadcast(`playlist/tracksVersus/${newTracksVersus.playlistId}`, {
-    currentTracksVersus: sanitizeTracksVersus(currentTracksVersus),
-  })
+    const currentTracksVersus = await VersusService.tracksVersusBroadcasted(
+      tracksVersus,
+      currentUser.id
+    )
+
+    console.log('currentTracksVersus', currentTracksVersus)
+    transmit.broadcast(`playlist/tracksVersus/${tracksVersus?.playlistId}`, {
+      currentTracksVersus: sanitizeTracksVersus(currentTracksVersus),
+    })
+  } else if (tracksVersusCreatedOrUpdated.status === TracksVersusStatus.MissingTracks) {
+    const tracksVersusWithVotingProgressStatus = await TracksVersus.query()
+      .where('playlist_id', playlist.id)
+      .andWhere('status', TracksVersusStatus.VotingProgress)
+      .first()
+
+    if (!tracksVersusWithVotingProgressStatus) {
+      const tracksVersus = await TracksVersus.query()
+        .where('id', tracksVersusCreatedOrUpdated.id)
+        .preload('firstTrack')
+        .preload('secondTrack')
+        .preload('likeTracks')
+        .first()
+
+      const currentTracksVersus = await VersusService.tracksVersusBroadcasted(
+        tracksVersus,
+        currentUser.id
+      )
+
+      console.log('currentTracksVersus', currentTracksVersus)
+      transmit.broadcast(`playlist/tracksVersus/${tracksVersus?.playlistId}`, {
+        currentTracksVersus: sanitizeTracksVersus(currentTracksVersus),
+      })
+    }
+  } else {
+    console.log('else')
+    return response.ok({ result: true })
+  }
 }
 
 export default addPendingTrack

@@ -1,6 +1,7 @@
 import { DateTime } from 'luxon'
 import { UserSession } from './common_interface.js'
 import TracksVersus from '#models/tracks_versus'
+import LikeTrack from '#models/like_track'
 
 export interface VersusTracksSession {
   id: string
@@ -68,13 +69,13 @@ export interface BroadcasterVersus {
   closingDate: DateTime | null
   firstTrack: VersusTrack | null
   secondTrack: VersusTrack | null
+  isComplete: boolean
 }
 
 export interface ScoreAndLikes {
   trackScore: number | null
-  alreadyLiked: boolean
   specialLike: number | null
-  nbLikes: number
+  listOfUserIdWhoLiked: string[] | []
 }
 
 export interface VersusTrack {

@@ -18,7 +18,6 @@ export default class extends BaseSchema {
       table.timestamp('created_at')
       table.timestamp('updated_at')
       table.index(['playlist_id'], 'playlist_tracks_playlist_index')
-      table.unique(['playlist_id', 'track_id'])
     })
   }
 

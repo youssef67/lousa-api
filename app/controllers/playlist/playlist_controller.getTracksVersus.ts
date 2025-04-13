@@ -11,34 +11,40 @@ const getTracksVersus = async ({ response, request, currentDevice }: HttpContext
   const currentUser = currentDevice.user
 
   // Get the playlist
-  const playlist = await Playlist.query()
-    .where('id', playlistId)
-    .preload('tracksVersus', (tracksVersusQuery) => {
-      tracksVersusQuery.preload('firstTrack')
-      tracksVersusQuery.preload('secondTrack')
-    })
-    .first()
+  const playlist = await Playlist.query().where('id', playlistId).first()
 
   if (!playlist) {
     throw ApiError.newError('ERROR_INVALID_DATA', 'PCGTV-1')
   }
 
-  let trackVersus = await TracksVersus.query()
+  let trackVersus: TracksVersus | null
+
+  trackVersus = await TracksVersus.query()
     .where('playlist_id', playlistId)
     .andWhere('status', TracksVersusStatus.VotingProgress)
-    .orWhere('status', TracksVersusStatus.MissingTracks)
     .preload('firstTrack')
     .preload('secondTrack')
     .preload('likeTracks')
     .first()
 
   if (!trackVersus) {
-    trackVersus = await VersusService.activationTracksVersus(playlistId)
+    trackVersus = await TracksVersus.query()
+      .where('playlist_id', playlistId)
+      .andWhere('status', TracksVersusStatus.MissingTracks)
+      .preload('firstTrack')
+      .preload('secondTrack')
+      .preload('likeTracks')
+      .first()
   }
 
   const currentTracksVersus = await VersusService.tracksVersusBroadcasted(
     trackVersus,
     currentUser.id
+  )
+
+  console.log(
+    'currentTracksVersus',
+    currentTracksVersus.firstTrack?.scoreAndLikes?.listOfUserIdWhoLiked
   )
 
   return response.ok({

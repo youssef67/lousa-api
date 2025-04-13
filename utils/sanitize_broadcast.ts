@@ -57,6 +57,7 @@ export function sanitizeTracksVersus(tracksVersus: BroadcasterVersus | null) {
     closingDate: closingDateToISO,
     firstTrack: sanitizeTrack(tracksVersus?.firstTrack ?? null),
     secondTrack: sanitizeTrack(tracksVersus?.secondTrack ?? null),
+    isComplete: tracksVersus?.secondTrack ? true : false,
   }
 }
 
@@ -85,9 +86,8 @@ export function sanitizeScoreAndLikes(score: ScoreAndLikes | null) {
 
   return {
     trackScore: score.trackScore,
-    alreadyLiked: score.alreadyLiked,
     specialLike: score.specialLike,
-    nbLikes: score.nbLikes,
+    listOfUserIdWhoLiked: score.listOfUserIdWhoLiked,
   }
 }
 
