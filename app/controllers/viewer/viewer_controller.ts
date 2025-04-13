@@ -13,6 +13,7 @@ const { default: checkUserNameAvailability } = await import(
 )
 const { default: getFavorites } = await import('./viewer_controller.getFavorites.js')
 const { default: getStreamerProfile } = await import('./viewer_controller.getStreamerProfile.js')
+const { default: statistics } = await import('./viewer_controller.statistics.js')
 
 export default class ViewerController {
   async addFavoritePlaylist(context: HttpContext) {
@@ -45,5 +46,9 @@ export default class ViewerController {
 
   async getStreamerProfile(context: HttpContext) {
     return await getStreamerProfile(context)
+  }
+
+  async statistics(context: HttpContext) {
+    return await statistics(context)
   }
 }

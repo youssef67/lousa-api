@@ -66,6 +66,7 @@ router
             router.post('profile', [ViewerController, 'completeProfile'])
             router.get('profile', [ViewerController, 'checkUserNameAvailability'])
             router.get('streamer', [ViewerController, 'getStreamerProfile'])
+            router.get('stats', [ViewerController, 'statistics'])
           })
           .use(middleware.authApiToken())
       })
