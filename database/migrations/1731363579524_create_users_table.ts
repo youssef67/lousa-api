@@ -17,6 +17,7 @@ export default class extends BaseSchema {
       table.uuid('spotify_user_id').nullable()
       table.uuid('twitch_user_id').nullable()
       table.uuid('playlist_selected').nullable()
+      table.integer('victory_points').defaultTo(0)
       table.timestamp('created_at').notNullable()
       table.timestamp('updated_at').notNullable()
       table.index(['email'], 'users_email_index')

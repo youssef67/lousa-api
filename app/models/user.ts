@@ -49,6 +49,9 @@ export default class User extends BaseModel {
   @column()
   declare playlistSelected: string | null
 
+  @column()
+  declare victoryPoints: number
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
@@ -110,6 +113,7 @@ export default class User extends BaseModel {
       email: this.email,
       role: this.role,
       amountVirtualCurrency: this.amountVirtualCurrency,
+      victoryPoints: this.victoryPoints,
       twitchUser: this.twitchUser?.serializeAsSession() || undefined,
       spotifyUser: this.spotifyUser?.serializeAsSession() || undefined,
     } as UserSession

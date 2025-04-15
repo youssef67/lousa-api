@@ -7,6 +7,7 @@ export interface UserSession {
   dateOfBirth?: string
   role: string
   amountVirtualCurrency: number
+  victoryPoints: number
   twitchUser?: TwitchUserSession
   spotifyUser?: SpotifyUserSession
 }

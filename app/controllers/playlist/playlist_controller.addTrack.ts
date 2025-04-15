@@ -71,6 +71,7 @@ const addTrack = async ({ response, request, currentDevice }: HttpContext) => {
   return response.ok({
     playlistsTracks: playlistsTracks,
     currentTracksVersus,
+    currentUser: currentUser.serializeAsSession(),
   })
 }
 

@@ -1,5 +1,6 @@
 import Track from '#models/track'
 import TracksVersus from '#models/tracks_versus'
+import User from '#models/user'
 import PlaylistService from '#services/playlist_service'
 import SpotifyService from '#services/spotify_service'
 import VersusService from '#services/versus_service'
@@ -40,6 +41,16 @@ export default class RegisterWinnerJob extends Job {
     await db.transaction(async (trx) => {
       // a. Enregistrer le gagnant
       const res = await VersusService.registerWinner(tracksVersusExisting, trx)
+
+      const userWinner = await User.query().where('id', res.winnerTrack.userId).first()
+
+      if (!userWinner) {
+        throw ApiError.newError('ERROR_INVALID_DATA', 'PCAT-2')
+      }
+
+      userWinner.victoryPoints += 10
+      userWinner.useTransaction(trx)
+      await userWinner.save()
 
       const trackExisting = await Track.query().where('id', res.winnerTrack.trackId).first()
 
