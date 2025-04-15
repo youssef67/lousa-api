@@ -7,7 +7,6 @@ import db from '@adonisjs/lucid/services/db'
 import VersusService from '#services/versus_service'
 import TracksVersus from '#models/tracks_versus'
 import User from '#models/user'
-import { Broadcastable } from '#types/broadcastable'
 
 const specialLikeTrack = async ({ response, request, currentDevice }: HttpContext) => {
   const payload = await request.validateUsing(SpecialLikeTrackValidator)
@@ -21,8 +20,9 @@ const specialLikeTrack = async ({ response, request, currentDevice }: HttpContex
   }
 
   let tracksVersusUpdated: TracksVersus | null = null
+  let userUpdated: User = {} as User
   await db.transaction(async (trx) => {
-    await VersusService.SpecialLikeTrack(
+    userUpdated = await VersusService.SpecialLikeTrack(
       payload.tracksVersusId,
       currentUser,
       payload.targetTrack,
@@ -48,7 +48,7 @@ const specialLikeTrack = async ({ response, request, currentDevice }: HttpContex
       currentTracksVersus: sanitizeTracksVersus(currentTracksVersus),
     })
 
-    return response.ok({ user: currentUser.serializeAsSession() })
+    return response.ok({ user: userUpdated.serializeAsSession() })
   } else {
     throw ApiError.newError('ERROR_INVALID_DATA', 'PCLA-2')
   }

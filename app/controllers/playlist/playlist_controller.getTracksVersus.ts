@@ -42,11 +42,6 @@ const getTracksVersus = async ({ response, request, currentDevice }: HttpContext
     currentUser.id
   )
 
-  console.log(
-    'currentTracksVersus',
-    currentTracksVersus.firstTrack?.scoreAndLikes?.listOfUserIdWhoLiked
-  )
-
   return response.ok({
     currentTracksVersus,
   })

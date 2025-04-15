@@ -2,6 +2,9 @@ import type { HttpContext } from '@adonisjs/core/http'
 const { default: addTrack } = await import('./playlist_controller.addTrack.js')
 const { default: addPendingTrack } = await import('./playlist_controller.addPendingTrack.js')
 const { default: getPlaylistTracks } = await import('./playlist_controller.getPlaylistTracks.js')
+const { default: getPlaylistSelected } = await import(
+  './playlist_controller.getPlaylistSelected.js'
+)
 const { default: getTracksVersus } = await import('./playlist_controller.getTracksVersus.js')
 const { default: searchTrack } = await import('./playlist_controller.searchTrack.js')
 const { default: likeTrack } = await import('./playlist_controller.likeTrack.js')
@@ -34,5 +37,9 @@ export default class PlaylistController {
 
   async getTracksVersus(context: HttpContext) {
     return await getTracksVersus(context)
+  }
+
+  async getPlaylistSelected(context: HttpContext) {
+    return await getPlaylistSelected(context)
   }
 }

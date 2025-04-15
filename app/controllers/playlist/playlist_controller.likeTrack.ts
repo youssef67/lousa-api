@@ -7,7 +7,6 @@ import db from '@adonisjs/lucid/services/db'
 import VersusService from '#services/versus_service'
 import TracksVersus from '#models/tracks_versus'
 import LikeTrack from '#models/like_track'
-import { Broadcastable } from '#types/broadcastable'
 
 const likeTrack = async ({ response, request, currentDevice }: HttpContext) => {
   const payload = await request.validateUsing(likeTrackValidator)

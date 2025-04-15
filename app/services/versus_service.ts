@@ -461,18 +461,34 @@ export default class VersusService {
       throw ApiError.newError('ERROR_INVALID_DATA', 'SSLT-1')
     }
 
+    const userWhoSpendVirtualCurrency = await User.query({ client: trx })
+      .where('id', user.id)
+      .first()
+
+    if (!userWhoSpendVirtualCurrency) {
+      throw ApiError.newError('ERROR_INVALID_DATA', 'SSLT-2')
+    }
+
+    if (userWhoSpendVirtualCurrency.amountVirtualCurrency < amount) {
+      throw ApiError.newError('ERROR_INVALID_DATA', 'SSLT-3')
+    }
+
     if (targetTrack === 1) tracksVersus.specialLikeFirstTrack += amount
     if (targetTrack === 2) tracksVersus.specialLikeSecondTrack += amount
     tracksVersus.useTransaction(trx)
     await tracksVersus.save()
 
-    await User.query({ client: trx })
-      .where('id', user.id)
-      .update({
-        amountVirtualCurrency: user.amountVirtualCurrency - amount,
-      })
+    userWhoSpendVirtualCurrency.amountVirtualCurrency -= amount
+    userWhoSpendVirtualCurrency.useTransaction(trx)
+    await userWhoSpendVirtualCurrency.save()
 
-    return user
+    // await User.query({ client: trx })
+    //   .where('id', user.id)
+    //   .update({
+    //     amountVirtualCurrency: user.amountVirtualCurrency - amount,
+    //   })
+
+    return userWhoSpendVirtualCurrency
   }
 
   static async createTracksVersusCommand(

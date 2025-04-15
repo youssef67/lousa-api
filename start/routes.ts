@@ -102,6 +102,7 @@ router
             router.post('track/special/like', [PlaylistController, 'specialLikeTrack'])
             router.get('', [PlaylistController, 'getPlaylistTracks'])
             router.get('tracksVersus', [PlaylistController, 'getTracksVersus'])
+            router.get('selected', [PlaylistController, 'getPlaylistSelected'])
           })
           .use(middleware.authApiToken())
       })
