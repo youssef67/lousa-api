@@ -7,6 +7,9 @@ const { default: setAndGetPlaylistSelected } = await import(
 )
 const { default: createPlaylist } = await import('./streamer_controller.createPlaylist.js')
 const { default: deletePlaylist } = await import('./streamer_controller.deletePlaylist.js')
+const { default: getPlaylistSelected } = await import(
+  './streamer_controller.getPlaylistSelected.js'
+)
 const { default: addStreamer } = await import('./streamer_controller.addStreamer.js')
 const { default: updateStreamersList } = await import(
   './streamer_controller.updateStreamersList.js'
@@ -39,6 +42,10 @@ export default class SessionController {
 
   async addStreamer(context: HttpContext) {
     return await addStreamer(context)
+  }
+
+  async getPlaylistSelected(context: HttpContext) {
+    return await getPlaylistSelected(context)
   }
 
   async updateStreamersList(context: HttpContext) {

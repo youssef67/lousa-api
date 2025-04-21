@@ -68,8 +68,16 @@ const createPlaylist = async ({ response, request, currentDevice }: HttpContext)
     await newPlaylist.save()
   })
 
+  const playlistCreated = {
+    id: newPlaylist.id,
+    playlistName: newPlaylist.playlistName,
+    nbTracks: 0,
+    isSelected: false,
+    nbFollowers: 0,
+  }
+
   return response.ok({
-    playlist: newPlaylist.serializePlaylist(),
+    playlistCreated,
   })
 }
 

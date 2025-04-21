@@ -47,6 +47,9 @@ export default class TracksVersus extends BaseModel {
   declare userWinner: string | null
 
   @column()
+  declare goldenLike: string | null
+
+  @column()
   declare status: TracksVersusStatus
 
   @column.dateTime({ autoCreate: true })

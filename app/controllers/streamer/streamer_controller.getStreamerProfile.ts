@@ -2,6 +2,9 @@ import type { HttpContext } from '@adonisjs/core/http'
 import ApiError from '#types/api_error'
 import User from '#models/user'
 import Playlist from '#models/playlist'
+import PlaylistTrack from '#models/playlist_track'
+import Track from '#models/track'
+import db from '@adonisjs/lucid/services/db'
 
 const getStreamerProfile = async ({ response, currentDevice }: HttpContext) => {
   await currentDevice.load('user')
@@ -14,37 +17,70 @@ const getStreamerProfile = async ({ response, currentDevice }: HttpContext) => {
         querySpaceStreamer.preload('playlists')
       })
     })
-    .preload('favoritesPlaylists')
     .first()
 
   if (!user) {
     throw ApiError.newError('ERROR_INVALID_DATA', 'SCGP-1')
   }
 
-  let playlistSelected = null
+  let playlistsTracks = null
+  let playlistInfoOfPlaylistSelected = null
   if (user.twitchUser.spaceStreamer.lastPlaylistIdSelected) {
-    playlistSelected = await Playlist.query()
+    const playlistSelected = await Playlist.query()
       .where('id', user.twitchUser.spaceStreamer.lastPlaylistIdSelected)
-      .preload('playlistTracks')
+      .preload('playlistTracks', (playlistTrackQuery) => {
+        playlistTrackQuery.where('is_ranked', true).preload('user').orderBy('position', 'asc')
+      })
       .first()
 
-    playlistSelected = {
-      id: playlistSelected?.id,
-      playlistName: playlistSelected?.playlistName,
-      nbTracks: playlistSelected?.playlistTracks.length,
+    if (!playlistSelected) {
+      throw ApiError.newError('ERROR_INVALID_DATA', 'SCGP-2')
+    }
+
+    playlistsTracks = await Promise.all(
+      playlistSelected.playlistTracks.map(async (playlistTrack: PlaylistTrack) => {
+        const trackData = await Track.findBy('id', playlistTrack.trackId)
+
+        if (!trackData) {
+          throw ApiError.newError('ERROR_INVALID_DATA', 'SCGP-3')
+        }
+
+        return { ...trackData.serializeTrack(), ...playlistTrack.serializePlaylistTrack() }
+      })
+    )
+
+    playlistInfoOfPlaylistSelected = {
+      id: playlistSelected.id,
+      playlistName: playlistSelected.playlistName,
     }
   }
 
-  const playlists = user.twitchUser.spaceStreamer.playlists.map((playlist) => ({
-    ...playlist.serializePlaylist(),
-  }))
+  const playlists = await Promise.all(
+    user.twitchUser.spaceStreamer.playlists.map(async (playlist) => {
+      await playlist.load('playlistTracks', (q) => q.where('isRanked', true))
+
+      const nbFollowers = await db
+        .from('favorite_playlists_users')
+        .where('playlist_id', playlist.id)
+        .count('*')
+
+      return {
+        id: playlist.id,
+        playlistName: playlist.playlistName,
+        nbTracks: playlist.playlistTracks.length,
+        isSelected: playlist.id === user.twitchUser.spaceStreamer.lastPlaylistIdSelected,
+        nbFollowers: Number.parseInt(nbFollowers[0].count),
+      }
+    })
+  )
 
   return response.ok({
     spaceStreamerProfile: {
       ...user.twitchUser.spaceStreamer.serializeAsSession(),
     },
     playlists,
-    playlistSelected,
+    playlistsTracks,
+    playlistInfoOfPlaylistSelected,
   })
 }
 

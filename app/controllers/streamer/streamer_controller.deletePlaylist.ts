@@ -7,8 +7,9 @@ const deletePlaylist = async ({ response, request, currentDevice }: HttpContext)
   const payload = await request.validateUsing(deletePlaylistValidator)
   await currentDevice.load('user')
 
+  console.log('payload', payload)
   try {
-    const playlist = await Playlist.findBy('id', payload.id)
+    const playlist = await Playlist.findBy('id', payload.playlistId)
 
     if (!playlist) {
       throw ApiError.newError('ERROR_INVALID_DATA', 'SCDP-1')

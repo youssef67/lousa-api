@@ -13,6 +13,7 @@ import db from '@adonisjs/lucid/services/db'
 import { spec } from 'node:test/reporters'
 import PlaylistTrack from '#models/playlist_track'
 import { TrackStatus } from '#types/track_status'
+import PlaylistService from './playlist_service.js'
 
 export default class VersusService {
   static async validateAndGetVersus(id: string) {
@@ -206,6 +207,61 @@ export default class VersusService {
       console.log('registerWinnerInCaseSimpleLike')
       winnerTrack = await this.registerWinnerInCaseSimpleLike(tracksVersus, trx)
     }
+
+    const nextTracksVersus = await this.setNextTracksVersus(tracksVersus.playlistId, trx)
+
+    if (nextTracksVersus) {
+      await JobsService.setRegisterWinnerJob(nextTracksVersus.id, trx)
+    }
+
+    return { winnerTrack, nextTracksVersus }
+  }
+
+  static async setWinnerGoldenLike(
+    tracksVersus: TracksVersus,
+    trackIndex: number,
+    trx: TransactionClientContract
+  ): Promise<RegisterWinnerResult> {
+    const getHigherRankedTrack = await PlaylistService.getHigherRankedTrack(tracksVersus.playlistId)
+
+    let winnerTrack: WinnerTrack = {} as WinnerTrack
+    if (trackIndex === 1) {
+      winnerTrack = await this.assignWinner(
+        tracksVersus.id!,
+        tracksVersus.firstTrackId!,
+        tracksVersus.firstTrackUser!,
+        getHigherRankedTrack.score + 10,
+        tracksVersus.specialLikeFirstTrack
+      )
+    } else {
+      winnerTrack = await this.assignWinner(
+        tracksVersus.id!,
+        tracksVersus.secondTrackId!,
+        tracksVersus.secondTrackUser!,
+        getHigherRankedTrack.score + 10,
+        tracksVersus.specialLikeSecondTrack
+      )
+    }
+
+    const updateData: any = {
+      trackWinner: winnerTrack.trackId,
+      userWinner: winnerTrack.userId,
+      status: TracksVersusStatus.CompletedVotes,
+    }
+
+    if (trackIndex === 1) {
+      updateData.specialLikeFirstTrack = winnerTrack.specialScore
+      updateData.firstTrackScore = winnerTrack.score
+    } else {
+      updateData.specialLikeSecondTrack = winnerTrack.specialScore
+      updateData.secondTrackScore = winnerTrack.score
+    }
+
+    await TracksVersus.query({ client: trx })
+      .update(updateData)
+      .where('id', winnerTrack.tracksVersusId)
+    tracksVersus.useTransaction(trx)
+    await tracksVersus.save()
 
     const nextTracksVersus = await this.setNextTracksVersus(tracksVersus.playlistId, trx)
 

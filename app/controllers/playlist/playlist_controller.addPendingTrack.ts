@@ -62,6 +62,9 @@ const addPendingTrack = async ({ response, request, currentDevice }: HttpContext
     }
   })
 
+  console.log('tracksVersusCreatedOrUpdated.status', tracksVersusCreatedOrUpdated.status)
+  console.log(tracksVersusCreatedOrUpdated.status === TracksVersusStatus.MissingTracks)
+
   if (tracksVersusCreatedOrUpdated.status === TracksVersusStatus.VotingProgress) {
     const tracksVersus = await TracksVersus.query()
       .where('id', tracksVersusCreatedOrUpdated.id)
@@ -102,9 +105,9 @@ const addPendingTrack = async ({ response, request, currentDevice }: HttpContext
       transmit.broadcast(`playlist/tracksVersus/${tracksVersus?.playlistId}`, {
         currentTracksVersus: sanitizeTracksVersus(currentTracksVersus),
       })
-
-      return response.ok({ result: PendingAddResult.MISSING })
     }
+
+    return response.ok({ result: PendingAddResult.MISSING })
   } else {
     return response.ok({ result: PendingAddResult.ON_HOLD })
   }

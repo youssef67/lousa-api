@@ -28,6 +28,14 @@ export const likeTrackValidator = vine.compile(
   })
 )
 
+export const setGoldenLikeValidator = vine.compile(
+  vine.object({
+    tracksVersusId: vine.string(),
+    trackId: vine.string(),
+    targetTrack: vine.number(),
+  })
+)
+
 export const SpecialLikeTrackValidator = vine.compile(
   vine.object({
     tracksVersusId: vine.string(),

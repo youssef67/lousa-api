@@ -101,6 +101,7 @@ export function sanitizeUser(user: UserSession): Record<string, string | number 
     dateOfBirth: user.dateOfBirth ?? null,
     role: user.role,
     amountVirtualCurrency: user.amountVirtualCurrency,
+    victoryPoints: user.victoryPoints,
   }
 }
 

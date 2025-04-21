@@ -43,7 +43,7 @@ export default class PlaylistService {
       .orderBy('score', 'desc')
       .orderBy('created_at', 'asc')
 
-    // 3. Garder les N meilleurs (par défaut 20)
+    // 3. Garder les N meilleurs (par défaut 8)
     const tracksToKeep = rankedTracks.slice(0, maxTracks)
     const tracksToRemove = rankedTracks.slice(maxTracks)
 
@@ -58,7 +58,7 @@ export default class PlaylistService {
     await Promise.all(
       tracksToKeep.map((t) => {
         t.useTransaction(trx)
-        t.save()
+        return t.save() // ✅ on retourne bien la promesse ici
       })
     )
 
@@ -73,11 +73,25 @@ export default class PlaylistService {
     await Promise.all(
       tracksToRemove.map((t) => {
         t.useTransaction(trx)
-        t.save()
+        return t.save() // ✅ aussi ici
       })
     )
 
     return tracksToKeep
+  }
+
+  static async getHigherRankedTrack(playlistId: string): Promise<PlaylistTrack> {
+    const rankedTracks = await PlaylistTrack.query()
+      .where('playlist_id', playlistId)
+      .andWhere('is_ranked', true)
+      .orderBy('score', 'desc')
+      .first()
+
+    if (!rankedTracks) {
+      throw ApiError.newError('ERROR_INVALID_DATA', 'PLSVC-1')
+    }
+
+    return rankedTracks
   }
 
   /**
@@ -93,7 +107,7 @@ export default class PlaylistService {
       .update({ spotifySnapShotId: newSnapshotId })
 
     if (!updated) {
-      throw ApiError.newError('ERROR_INVALID_DATA', 'PLSVC-1')
+      throw ApiError.newError('ERROR_INVALID_DATA', 'PLSVC-2')
     }
   }
 
@@ -107,17 +121,14 @@ export default class PlaylistService {
       .first()
 
     if (!playlist) {
-      throw ApiError.newError('ERROR_INVALID_DATA', 'PLSVC-2')
+      throw ApiError.newError('ERROR_INVALID_DATA', 'PLSVC-3')
     }
 
     return playlist
   }
 
-  static async getPlaylistTracksRanked(
-    playlistId: string,
-    trx: TransactionClientContract
-  ): Promise<PlaylistTrack[]> {
-    const rankedTracks = await PlaylistTrack.query({ client: trx })
+  static async getPlaylistTracksRanked(playlistId: string): Promise<PlaylistTrack[]> {
+    const rankedTracks = await PlaylistTrack.query()
       .where('playlist_id', playlistId)
       .andWhere('is_ranked', true)
       .preload('user')
