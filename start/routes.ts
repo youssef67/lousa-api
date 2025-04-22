@@ -96,12 +96,11 @@ router
         router
           .group(() => {
             router.get('track/search', [PlaylistController, 'searchTrack'])
-            router.get('track/add', [PlaylistController, 'addTrack'])
             router.post('pending/track/add', [PlaylistController, 'addPendingTrack'])
             router.post('track/like', [PlaylistController, 'likeTrack'])
             router.post('track/special/like', [PlaylistController, 'specialLikeTrack'])
             router.post('golden-like', [PlaylistController, 'setGoldenLike'])
-            router.get('', [PlaylistController, 'getPlaylistTracks'])
+            router.get('', [PlaylistController, 'getPlaylist'])
             router.get('tracksVersus', [PlaylistController, 'getTracksVersus'])
             router.get('selected', [PlaylistController, 'getPlaylistSelected'])
             router.get('updated/streamer', [PlaylistController, 'getPlaylistUpdatedForStreamer'])

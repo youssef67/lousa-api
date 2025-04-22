@@ -2,25 +2,19 @@ import type { HttpContext } from '@adonisjs/core/http'
 import ApiError from '#types/api_error'
 import PlaylistTrack from '#models/playlist_track'
 import Track from '#models/track'
+import db from '@adonisjs/lucid/services/db'
 import VersusService from '#services/versus_service'
 import TracksVersus from '#models/tracks_versus'
 import { TracksVersusStatus } from '#types/versus.status'
 import Playlist from '#models/playlist'
 
-const addTrack = async ({ response, request, currentDevice }: HttpContext) => {
-  const tracksVersusId = request.input('tracksVersusId')
+const getPlaylist = async ({ response, request, currentDevice }: HttpContext) => {
+  const playlistId = request.input('playlistId')
   await currentDevice.load('user')
   const currentUser = currentDevice.user
 
-  // 1. Charger et valider le Versus
-  const tracksVersusExisting = await TracksVersus.query().where('id', tracksVersusId).first()
-
-  if (!tracksVersusExisting) {
-    throw ApiError.newError('ERROR_INVALID_DATA', 'PCAT-1')
-  }
-
   const playlist = await Playlist.query()
-    .where('id', tracksVersusExisting.playlistId)
+    .where('id', playlistId)
     .preload('playlistTracks', (playlistTrackQuery) => {
       playlistTrackQuery.where('is_ranked', true).preload('user').orderBy('position', 'asc')
     })
@@ -29,6 +23,22 @@ const addTrack = async ({ response, request, currentDevice }: HttpContext) => {
 
   if (!playlist) {
     throw ApiError.newError('ERROR_INVALID_DATA', 'PUGP-1')
+  }
+
+  const playlistInfo = {
+    id: playlist.id,
+    playlistName: playlist.playlistName,
+    spaceStreamerId: playlist.spaceStreamer.id,
+    spaceStreamerName: playlist.spaceStreamer.nameSpace,
+    spaceStreamerImg: playlist.spaceStreamer.spaceStreamerImg,
+  }
+
+  if (currentUser.playlistSelected !== playlist.id) {
+    await db.transaction(async (trx) => {
+      currentUser.playlistSelected = playlist.id
+      currentUser.useTransaction(trx)
+      await currentUser.save()
+    })
   }
 
   const playlistsTracks = await Promise.all(
@@ -46,7 +56,7 @@ const addTrack = async ({ response, request, currentDevice }: HttpContext) => {
   let trackVersus: TracksVersus | null
 
   trackVersus = await TracksVersus.query()
-    .where('playlist_id', tracksVersusExisting.playlistId)
+    .where('playlist_id', playlist.id)
     .andWhere('status', TracksVersusStatus.VotingProgress)
     .preload('firstTrack')
     .preload('secondTrack')
@@ -55,7 +65,7 @@ const addTrack = async ({ response, request, currentDevice }: HttpContext) => {
 
   if (!trackVersus) {
     trackVersus = await TracksVersus.query()
-      .where('playlist_id', tracksVersusExisting.playlistId)
+      .where('playlist_id', playlist.id)
       .andWhere('status', TracksVersusStatus.MissingTracks)
       .preload('firstTrack')
       .preload('secondTrack')
@@ -70,9 +80,10 @@ const addTrack = async ({ response, request, currentDevice }: HttpContext) => {
 
   return response.ok({
     playlistsTracks: playlistsTracks,
+    playlistInfo,
     currentTracksVersus,
     currentUser: currentUser.serializeAsSession(),
   })
 }
 
-export default addTrack
+export default getPlaylist
