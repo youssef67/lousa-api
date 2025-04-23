@@ -103,7 +103,7 @@ router
             router.get('', [PlaylistController, 'getPlaylist'])
             router.get('tracksVersus', [PlaylistController, 'getTracksVersus'])
             router.get('selected', [PlaylistController, 'getPlaylistSelected'])
-            router.get('updated/streamer', [PlaylistController, 'getPlaylistUpdatedForStreamer'])
+            router.get('streamer', [PlaylistController, 'getPlaylistForStreamer'])
           })
           .use(middleware.authApiToken())
       })

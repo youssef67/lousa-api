@@ -8,8 +8,9 @@ import { TracksVersusStatus } from '#types/versus.status'
 import Playlist from '#models/playlist'
 import db from '@adonisjs/lucid/services/db'
 
-const getPlaylistUpdatedForStreamer = async ({ response, request, currentDevice }: HttpContext) => {
+const getPlaylistForStreamer = async ({ response, request, currentDevice }: HttpContext) => {
   const playlistId = request.input('playlistId')
+
   await currentDevice.load('user', (queryUser) => {
     queryUser.preload('twitchUser', (queryTwitchUser) => {
       queryTwitchUser.preload('spaceStreamer', (querySpaceStreamer) => {
@@ -42,9 +43,12 @@ const getPlaylistUpdatedForStreamer = async ({ response, request, currentDevice 
     })
   )
 
-  const playlistInfoOfPlaylistSelected = {
+  const currentPlaylist = {
     id: playlist.id,
     playlistName: playlist.playlistName,
+    spaceStreamerId: currentUser.twitchUser.spaceStreamer.id,
+    spaceStreamerName: currentUser.twitchUser.spaceStreamer.nameSpace,
+    spaceStreamerImg: currentUser.twitchUser.spaceStreamer.spaceStreamerImg,
   }
 
   console.log('playlist.id ', playlist.id)
@@ -54,7 +58,7 @@ const getPlaylistUpdatedForStreamer = async ({ response, request, currentDevice 
     await currentUser.twitchUser.spaceStreamer.save()
   })
 
-  const playlists = await Promise.all(
+  const otherPlaylists = await Promise.all(
     currentUser.twitchUser.spaceStreamer.playlists.map(async (item) => {
       await item.load('playlistTracks', (q) => q.where('isRanked', true))
 
@@ -99,11 +103,11 @@ const getPlaylistUpdatedForStreamer = async ({ response, request, currentDevice 
   )
 
   return response.ok({
-    playlistInfoOfPlaylistSelected,
-    playlistsTracks: playlistsTracks,
+    currentPlaylist,
+    playlistsTracks,
     currentTracksVersus,
-    playlists,
+    otherPlaylists,
   })
 }
 
-export default getPlaylistUpdatedForStreamer
+export default getPlaylistForStreamer

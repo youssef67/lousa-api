@@ -62,7 +62,7 @@ export default class VersusService {
         : TracksVersusStatus.VotingProgress
       lastVersusRecorded.closingDate = existingActiveVersus
         ? null
-        : DateTime.now().plus({ seconds: 90 })
+        : DateTime.now().plus({ seconds: 15 })
       lastVersusRecorded.useTransaction(trx)
       await lastVersusRecorded.save()
       // Le dernier tracksVersus n'existe pas ou a un statut indiquant qu'il est soit en cours de votes, soit en attente, soit terminé
@@ -184,7 +184,7 @@ export default class VersusService {
 
     if (tracksVersusToBeActivated) {
       tracksVersusToBeActivated.status = TracksVersusStatus.VotingProgress
-      tracksVersusToBeActivated.closingDate = DateTime.now().plus({ seconds: 90 })
+      tracksVersusToBeActivated.closingDate = DateTime.now().plus({ seconds: 15 })
       tracksVersusToBeActivated.useTransaction(trx)
       await tracksVersusToBeActivated.save()
     }
@@ -287,7 +287,7 @@ export default class VersusService {
 
     if (nextTracksVersus) {
       nextTracksVersus.status = TracksVersusStatus.VotingProgress
-      nextTracksVersus.closingDate = DateTime.now().plus({ seconds: 90 })
+      nextTracksVersus.closingDate = DateTime.now().plus({ seconds: 15 })
       nextTracksVersus.useTransaction(trx)
       await nextTracksVersus.save()
     }
@@ -574,7 +574,7 @@ export default class VersusService {
       newVersus.secondTrackUser = secondUser.id
       newVersus.status = status
       newVersus.closingDate =
-        status === TracksVersusStatus.VotingProgress ? DateTime.now().plus({ seconds: 90 }) : null
+        status === TracksVersusStatus.VotingProgress ? DateTime.now().plus({ seconds: 15 }) : null
       newVersus.useTransaction(trx)
       await newVersus.save()
 

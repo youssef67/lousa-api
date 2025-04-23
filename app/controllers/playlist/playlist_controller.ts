@@ -9,8 +9,8 @@ const { default: searchTrack } = await import('./playlist_controller.searchTrack
 const { default: likeTrack } = await import('./playlist_controller.likeTrack.js')
 const { default: setGoldenLike } = await import('./playlist_controller.setGoldenLike.js')
 const { default: specialLikeTrack } = await import('./playlist_controller.specialLikeTrack.js')
-const { default: getPlaylistUpdatedForStreamer } = await import(
-  './playlist_controller.getPlaylistUpdatedForStreamer.js'
+const { default: getPlaylistForStreamer } = await import(
+  './playlist_controller.getPlaylistForStreamer.js'
 )
 
 export default class PlaylistController {
@@ -42,8 +42,8 @@ export default class PlaylistController {
     return await getPlaylistSelected(context)
   }
 
-  async getPlaylistUpdatedForStreamer(context: HttpContext) {
-    return await getPlaylistUpdatedForStreamer(context)
+  async getPlaylistForStreamer(context: HttpContext) {
+    return await getPlaylistForStreamer(context)
   }
 
   async setGoldenLike(context: HttpContext) {

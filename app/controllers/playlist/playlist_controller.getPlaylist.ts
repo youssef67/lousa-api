@@ -10,6 +10,7 @@ import Playlist from '#models/playlist'
 
 const getPlaylist = async ({ response, request, currentDevice }: HttpContext) => {
   const playlistId = request.input('playlistId')
+
   await currentDevice.load('user')
   const currentUser = currentDevice.user
 
@@ -25,7 +26,7 @@ const getPlaylist = async ({ response, request, currentDevice }: HttpContext) =>
     throw ApiError.newError('ERROR_INVALID_DATA', 'PUGP-1')
   }
 
-  const playlistInfo = {
+  const currentPlaylist = {
     id: playlist.id,
     playlistName: playlist.playlistName,
     spaceStreamerId: playlist.spaceStreamer.id,
@@ -79,8 +80,8 @@ const getPlaylist = async ({ response, request, currentDevice }: HttpContext) =>
   )
 
   return response.ok({
-    playlistsTracks: playlistsTracks,
-    playlistInfo,
+    currentPlaylist,
+    playlistsTracks,
     currentTracksVersus,
     currentUser: currentUser.serializeAsSession(),
   })
