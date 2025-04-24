@@ -24,7 +24,7 @@ const getStreamerProfile = async ({ response, currentDevice }: HttpContext) => {
   }
 
   let playlistsTracks = null
-  let playlistInfoOfPlaylistSelected = null
+  let currentPlaylist = null
   if (user.twitchUser.spaceStreamer.lastPlaylistIdSelected) {
     const playlistSelected = await Playlist.query()
       .where('id', user.twitchUser.spaceStreamer.lastPlaylistIdSelected)
@@ -49,13 +49,13 @@ const getStreamerProfile = async ({ response, currentDevice }: HttpContext) => {
       })
     )
 
-    playlistInfoOfPlaylistSelected = {
+    currentPlaylist = {
       id: playlistSelected.id,
       playlistName: playlistSelected.playlistName,
     }
   }
 
-  const playlists = await Promise.all(
+  const otherPlaylists = await Promise.all(
     user.twitchUser.spaceStreamer.playlists.map(async (playlist) => {
       await playlist.load('playlistTracks', (q) => q.where('isRanked', true))
 
@@ -78,9 +78,9 @@ const getStreamerProfile = async ({ response, currentDevice }: HttpContext) => {
     spaceStreamerProfile: {
       ...user.twitchUser.spaceStreamer.serializeAsSession(),
     },
-    playlists,
+    otherPlaylists,
     playlistsTracks,
-    playlistInfoOfPlaylistSelected,
+    currentPlaylist,
   })
 }
 

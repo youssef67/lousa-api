@@ -7,24 +7,17 @@ import User from '#models/user'
 
 const setAndGetPlaylistSelected = async ({ response, request, currentDevice }: HttpContext) => {
   const payload = await request.validateUsing(setAndGetPlaylistSelectedValidator)
-  await currentDevice.load('user')
-  const currentUser = currentDevice.user
-
-  const user = await User.query()
-    .where('id', currentUser.id)
-    .preload('twitchUser', (queryTwitchUser) => {
+  await currentDevice.load('user', (queryUser) => {
+    queryUser.preload('twitchUser', (queryTwitchUser) => {
       queryTwitchUser.preload('spaceStreamer')
     })
-    .first()
-
-  if (!user) {
-    throw ApiError.newError('ERROR_INVALID_DATA', 'SCSGP-1')
-  }
+  })
+  const currentUser = currentDevice.user
 
   await db.transaction(async (trx) => {
-    user.twitchUser.spaceStreamer.lastPlaylistIdSelected = payload.playlistId
-    user.twitchUser.spaceStreamer.useTransaction(trx)
-    await user.twitchUser.spaceStreamer.save()
+    currentUser.twitchUser.spaceStreamer.lastPlaylistIdSelected = payload.playlistId
+    currentUser.twitchUser.spaceStreamer.useTransaction(trx)
+    await currentUser.twitchUser.spaceStreamer.save()
   })
 
   const playlist = await Playlist.query()

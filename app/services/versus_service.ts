@@ -9,22 +9,21 @@ import type { TransactionClientContract } from '@adonisjs/lucid/types/database'
 import { DateTime } from 'luxon'
 import { RegisterWinnerResult } from '#interfaces/playlist_interface'
 import JobsService from './jobs_service.js'
-import db from '@adonisjs/lucid/services/db'
-import { spec } from 'node:test/reporters'
 import PlaylistTrack from '#models/playlist_track'
-import { TrackStatus } from '#types/track_status'
 import PlaylistService from './playlist_service.js'
 
 export default class VersusService {
-  static async validateAndGetVersus(id: string) {
-    const versus = await TracksVersus.findBy('id', id)
-    if (!versus) {
-      throw ApiError.newError('ERROR_INVALID_DATA', 'STV-1')
-    }
-
-    if (versus.trackWinner) {
-      return null
-    }
+  static async getTracksVersusByPlaylistIdAndStatus(
+    id: string,
+    status: TracksVersusStatus
+  ): Promise<TracksVersus | null> {
+    const versus = await TracksVersus.query()
+      .where('playlist_id', id)
+      .andWhere('status', status)
+      .preload('firstTrack')
+      .preload('secondTrack')
+      .preload('likeTracks')
+      .first()
 
     return versus
   }
@@ -46,7 +45,6 @@ export default class VersusService {
     // Le dernier tracksVersus enregistré est en attente d'une musique, on va le compléter
     if (lastVersusRecorded?.status === TracksVersusStatus.MissingTracks) {
       if (lastVersusRecorded.firstTrackUser === userId) {
-        console.log('Le user a déjà soumis une musique sur ce tracksVersus')
         throw ApiError.newError('ERROR_INVALID_DATA', 'SVTCUCT-1')
       }
 
@@ -62,7 +60,7 @@ export default class VersusService {
         : TracksVersusStatus.VotingProgress
       lastVersusRecorded.closingDate = existingActiveVersus
         ? null
-        : DateTime.now().plus({ seconds: 15 })
+        : DateTime.now().plus({ seconds: 90 })
       lastVersusRecorded.useTransaction(trx)
       await lastVersusRecorded.save()
       // Le dernier tracksVersus n'existe pas ou a un statut indiquant qu'il est soit en cours de votes, soit en attente, soit terminé
@@ -79,6 +77,10 @@ export default class VersusService {
       lastVersusRecorded.useTransaction(trx)
       await lastVersusRecorded.save()
     }
+
+    await lastVersusRecorded.load('firstTrack')
+    await lastVersusRecorded.load('secondTrack')
+    await lastVersusRecorded.load('likeTracks')
 
     return lastVersusRecorded
   }
@@ -170,25 +172,25 @@ export default class VersusService {
     return tracksVersusBroadcasted
   }
 
-  static async activationTracksVersus(
-    playlistId: string,
-    trx: TransactionClientContract
-  ): Promise<void> {
-    const tracksVersusToBeActivated = await TracksVersus.query({ client: trx })
-      .where('playlist_id', playlistId)
-      .andWhere('status', TracksVersusStatus.OnHold)
-      .preload('firstTrack')
-      .preload('secondTrack')
-      .orderBy('created_at', 'asc')
-      .first()
+  // static async activationTracksVersus(
+  //   playlistId: string,
+  //   trx: TransactionClientContract
+  // ): Promise<void> {
+  //   const tracksVersusToBeActivated = await TracksVersus.query({ client: trx })
+  //     .where('playlist_id', playlistId)
+  //     .andWhere('status', TracksVersusStatus.OnHold)
+  //     .preload('firstTrack')
+  //     .preload('secondTrack')
+  //     .orderBy('created_at', 'asc')
+  //     .first()
 
-    if (tracksVersusToBeActivated) {
-      tracksVersusToBeActivated.status = TracksVersusStatus.VotingProgress
-      tracksVersusToBeActivated.closingDate = DateTime.now().plus({ seconds: 15 })
-      tracksVersusToBeActivated.useTransaction(trx)
-      await tracksVersusToBeActivated.save()
-    }
-  }
+  //   if (tracksVersusToBeActivated) {
+  //     tracksVersusToBeActivated.status = TracksVersusStatus.VotingProgress
+  //     tracksVersusToBeActivated.closingDate = DateTime.now().plus({ seconds: 90 })
+  //     tracksVersusToBeActivated.useTransaction(trx)
+  //     await tracksVersusToBeActivated.save()
+  //   }
+  // }
 
   static async registerWinner(
     tracksVersus: TracksVersus,
@@ -198,13 +200,10 @@ export default class VersusService {
 
     let winnerTrack: WinnerTrack = {} as WinnerTrack
     if (!secondTrackId) {
-      console.log('registerWinnerInCaseOneTrackMissing')
       winnerTrack = await this.registerWinnerInCaseOneTrackMissing(tracksVersus, trx)
     } else if (specialLikeFirstTrack > 0 || specialLikeSecondTrack > 0) {
-      console.log('registerWinnerInCaseSpecialLike')
       winnerTrack = await this.registerWinnerInCaseSpecialLike(tracksVersus, trx)
     } else {
-      console.log('registerWinnerInCaseSimpleLike')
       winnerTrack = await this.registerWinnerInCaseSimpleLike(tracksVersus, trx)
     }
 
@@ -287,7 +286,7 @@ export default class VersusService {
 
     if (nextTracksVersus) {
       nextTracksVersus.status = TracksVersusStatus.VotingProgress
-      nextTracksVersus.closingDate = DateTime.now().plus({ seconds: 15 })
+      nextTracksVersus.closingDate = DateTime.now().plus({ seconds: 90 })
       nextTracksVersus.useTransaction(trx)
       await nextTracksVersus.save()
     }
@@ -574,7 +573,7 @@ export default class VersusService {
       newVersus.secondTrackUser = secondUser.id
       newVersus.status = status
       newVersus.closingDate =
-        status === TracksVersusStatus.VotingProgress ? DateTime.now().plus({ seconds: 15 }) : null
+        status === TracksVersusStatus.VotingProgress ? DateTime.now().plus({ seconds: 90 }) : null
       newVersus.useTransaction(trx)
       await newVersus.save()
 

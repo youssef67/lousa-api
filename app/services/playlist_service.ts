@@ -3,6 +3,7 @@ import Playlist from '#models/playlist'
 import PlaylistTrack from '#models/playlist_track'
 import { TrackStatus } from '#types/track_status'
 import ApiError from '#types/api_error'
+import Track from '#models/track'
 
 interface AddTrackOptions {
   playlistId: string
@@ -127,14 +128,27 @@ export default class PlaylistService {
     return playlist
   }
 
-  static async getPlaylistTracksRanked(playlistId: string): Promise<PlaylistTrack[]> {
-    const rankedTracks = await PlaylistTrack.query()
-      .where('playlist_id', playlistId)
-      .andWhere('is_ranked', true)
-      .preload('user')
-      .orderBy('score', 'desc')
-      .orderBy('created_at', 'asc')
+  static async getRankedPlaylistTracksFormatted(playlistTracks: PlaylistTrack[]) {
+    const trackIds = playlistTracks.map((pt) => pt.trackId)
+    const allTracks = await Track.query().whereIn('id', trackIds)
 
-    return rankedTracks
+    const trackMap = new Map<string, Track>()
+    allTracks.forEach((track) => {
+      trackMap.set(track.id, track)
+    })
+
+    const playlistsTracks = await Promise.all(
+      playlistTracks.map(async (playlistTrack: PlaylistTrack) => {
+        const trackData = trackMap.get(playlistTrack.trackId)
+
+        if (!trackData) {
+          throw ApiError.newError('ERROR_INVALID_DATA', 'PCGP-2')
+        }
+
+        return { ...trackData.serializeTrack(), ...playlistTrack.serializePlaylistTrack() }
+      })
+    )
+
+    return playlistsTracks
   }
 }

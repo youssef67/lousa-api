@@ -19,22 +19,16 @@ const getTracksVersus = async ({ response, request, currentDevice }: HttpContext
 
   let trackVersus: TracksVersus | null
 
-  trackVersus = await TracksVersus.query()
-    .where('playlist_id', playlistId)
-    .andWhere('status', TracksVersusStatus.VotingProgress)
-    .preload('firstTrack')
-    .preload('secondTrack')
-    .preload('likeTracks')
-    .first()
+  trackVersus = await VersusService.getTracksVersusByPlaylistIdAndStatus(
+    playlist.id,
+    TracksVersusStatus.VotingProgress
+  )
 
   if (!trackVersus) {
-    trackVersus = await TracksVersus.query()
-      .where('playlist_id', playlistId)
-      .andWhere('status', TracksVersusStatus.MissingTracks)
-      .preload('firstTrack')
-      .preload('secondTrack')
-      .preload('likeTracks')
-      .first()
+    trackVersus = await VersusService.getTracksVersusByPlaylistIdAndStatus(
+      playlist.id,
+      TracksVersusStatus.MissingTracks
+    )
   }
 
   const currentTracksVersus = await VersusService.tracksVersusBroadcasted(

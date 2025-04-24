@@ -2,7 +2,6 @@ import type { HttpContext } from '@adonisjs/core/http'
 import ApiError from '#types/api_error'
 import SpaceStreamer from '#models/space_streamer'
 import db from '@adonisjs/lucid/services/db'
-import Playlist from '#models/playlist'
 
 const getStreamerProfile = async ({ response, request, currentDevice }: HttpContext) => {
   const spaceStreamerId = request.input('spaceStreamerId')

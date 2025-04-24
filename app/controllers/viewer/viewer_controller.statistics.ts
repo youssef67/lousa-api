@@ -35,11 +35,6 @@ const statistics = async ({ response, request, currentDevice }: HttpContext) => 
     (tracksVersus) => tracksVersus.userWinner === userId
   )
 
-  // console.log('tracksVersusCompleted', tracksVersusCompleted.length)
-  // console.log('tracksVersusVotingInProgress', tracksVersusVotingInProgress.length)
-  // console.log('tracksVersusOnHold', tracksVersusOnHold.length)
-  // console.log('tracksVersusWon', tracksVersusWon.length)
-
   const playlistTracksOnTop = await PlaylistTrack.query()
     .where('user_id', userId)
     .andWhereBetween('position', [1, 3])
@@ -47,9 +42,6 @@ const statistics = async ({ response, request, currentDevice }: HttpContext) => 
   const playlistsRanked = await PlaylistTrack.query()
     .where('user_id', userId)
     .andWhere('is_ranked', true)
-
-  // console.log('playlistsOnTop', playlistTracksOnTop.length)
-  // console.log('playlistsRanked', playlistsRanked.length)
 
   return response.ok({
     userName: user.userName,

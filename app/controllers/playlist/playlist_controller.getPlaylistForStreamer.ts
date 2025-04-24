@@ -7,6 +7,7 @@ import TracksVersus from '#models/tracks_versus'
 import { TracksVersusStatus } from '#types/versus.status'
 import Playlist from '#models/playlist'
 import db from '@adonisjs/lucid/services/db'
+import PlaylistService from '#services/playlist_service'
 
 const getPlaylistForStreamer = async ({ response, request, currentDevice }: HttpContext) => {
   const playlistId = request.input('playlistId')
@@ -31,16 +32,8 @@ const getPlaylistForStreamer = async ({ response, request, currentDevice }: Http
     throw ApiError.newError('ERROR_INVALID_DATA', 'PUGP-1')
   }
 
-  const playlistsTracks = await Promise.all(
-    playlist.playlistTracks.map(async (playlistTrack: PlaylistTrack) => {
-      const trackData = await Track.findBy('id', playlistTrack.trackId)
-
-      if (!trackData) {
-        throw ApiError.newError('ERROR_INVALID_DATA', 'PCGP-2')
-      }
-
-      return { ...trackData.serializeTrack(), ...playlistTrack.serializePlaylistTrack() }
-    })
+  const playlistsTracks = await PlaylistService.getRankedPlaylistTracksFormatted(
+    playlist.playlistTracks
   )
 
   const currentPlaylist = {
@@ -51,7 +44,6 @@ const getPlaylistForStreamer = async ({ response, request, currentDevice }: Http
     spaceStreamerImg: currentUser.twitchUser.spaceStreamer.spaceStreamerImg,
   }
 
-  console.log('playlist.id ', playlist.id)
   await db.transaction(async (trx) => {
     currentUser.twitchUser.spaceStreamer.lastPlaylistIdSelected = playlist.id
     currentUser.twitchUser.spaceStreamer.useTransaction(trx)
@@ -79,22 +71,16 @@ const getPlaylistForStreamer = async ({ response, request, currentDevice }: Http
 
   let trackVersus: TracksVersus | null
 
-  trackVersus = await TracksVersus.query()
-    .where('playlist_id', playlistId)
-    .andWhere('status', TracksVersusStatus.VotingProgress)
-    .preload('firstTrack')
-    .preload('secondTrack')
-    .preload('likeTracks')
-    .first()
+  trackVersus = await VersusService.getTracksVersusByPlaylistIdAndStatus(
+    playlist.id,
+    TracksVersusStatus.VotingProgress
+  )
 
   if (!trackVersus) {
-    trackVersus = await TracksVersus.query()
-      .where('playlist_id', playlistId)
-      .andWhere('status', TracksVersusStatus.MissingTracks)
-      .preload('firstTrack')
-      .preload('secondTrack')
-      .preload('likeTracks')
-      .first()
+    trackVersus = await VersusService.getTracksVersusByPlaylistIdAndStatus(
+      playlist.id,
+      TracksVersusStatus.MissingTracks
+    )
   }
 
   const currentTracksVersus = await VersusService.tracksVersusBroadcasted(

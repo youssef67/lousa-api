@@ -12,6 +12,7 @@ import { sanitizeTracksVersus } from '#utils/sanitize_broadcast'
 import TracksVersus from '#models/tracks_versus'
 import { TracksVersusStatus } from '#types/versus.status'
 import { PendingAddResult } from '#types/pending_status'
+import { MAX_PENDING_TRACKS } from '#config/versus_limits'
 
 const addPendingTrack = async ({ response, request, currentDevice }: HttpContext) => {
   const payload = await request.validateUsing(addPendingTrackValidator)
@@ -41,11 +42,11 @@ const addPendingTrack = async ({ response, request, currentDevice }: HttpContext
     })
     .andWhere('status', '!=', TracksVersusStatus.CompletedVotes)
 
-  if (nbVersusTracks.length >= 2) {
+  if (nbVersusTracks.length >= MAX_PENDING_TRACKS) {
     return response.ok({ result: PendingAddResult.LIMIT_REACH })
   }
 
-  // Add track spotify data to the database
+  // Create or update new tracksVersus
   let track: Track
   let tracksVersusCreatedOrUpdated: TracksVersus = {} as TracksVersus
   await db.transaction(async (trx) => {
@@ -57,28 +58,19 @@ const addPendingTrack = async ({ response, request, currentDevice }: HttpContext
       trx
     )
 
+    // Set the job to register the winner if the tracksVersus is in voting progress
     if (tracksVersusCreatedOrUpdated.closingDate) {
       await JobsService.setRegisterWinnerJob(tracksVersusCreatedOrUpdated.id, trx)
     }
   })
 
-  console.log('tracksVersusCreatedOrUpdated.status', tracksVersusCreatedOrUpdated.status)
-  console.log(tracksVersusCreatedOrUpdated.status === TracksVersusStatus.MissingTracks)
-
   if (tracksVersusCreatedOrUpdated.status === TracksVersusStatus.VotingProgress) {
-    const tracksVersus = await TracksVersus.query()
-      .where('id', tracksVersusCreatedOrUpdated.id)
-      .preload('firstTrack')
-      .preload('secondTrack')
-      .preload('likeTracks')
-      .first()
-
     const currentTracksVersus = await VersusService.tracksVersusBroadcasted(
-      tracksVersus,
+      tracksVersusCreatedOrUpdated,
       currentUser.id
     )
 
-    transmit.broadcast(`playlist/tracksVersus/${tracksVersus?.playlistId}`, {
+    transmit.broadcast(`playlist/tracksVersus/${tracksVersusCreatedOrUpdated.playlistId}`, {
       currentTracksVersus: sanitizeTracksVersus(currentTracksVersus),
     })
 
@@ -90,19 +82,12 @@ const addPendingTrack = async ({ response, request, currentDevice }: HttpContext
       .first()
 
     if (!tracksVersusWithVotingProgressStatus) {
-      const tracksVersus = await TracksVersus.query()
-        .where('id', tracksVersusCreatedOrUpdated.id)
-        .preload('firstTrack')
-        .preload('secondTrack')
-        .preload('likeTracks')
-        .first()
-
       const currentTracksVersus = await VersusService.tracksVersusBroadcasted(
-        tracksVersus,
+        tracksVersusCreatedOrUpdated,
         currentUser.id
       )
 
-      transmit.broadcast(`playlist/tracksVersus/${tracksVersus?.playlistId}`, {
+      transmit.broadcast(`playlist/tracksVersus/${tracksVersusCreatedOrUpdated?.playlistId}`, {
         currentTracksVersus: sanitizeTracksVersus(currentTracksVersus),
       })
     }

@@ -1,12 +1,11 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import ApiError from '#types/api_error'
-import PlaylistTrack from '#models/playlist_track'
-import Track from '#models/track'
 import db from '@adonisjs/lucid/services/db'
 import VersusService from '#services/versus_service'
 import TracksVersus from '#models/tracks_versus'
 import { TracksVersusStatus } from '#types/versus.status'
 import Playlist from '#models/playlist'
+import PlaylistService from '#services/playlist_service'
 
 const getPlaylist = async ({ response, request, currentDevice }: HttpContext) => {
   const playlistId = request.input('playlistId')
@@ -42,36 +41,22 @@ const getPlaylist = async ({ response, request, currentDevice }: HttpContext) =>
     })
   }
 
-  const playlistsTracks = await Promise.all(
-    playlist.playlistTracks.map(async (playlistTrack: PlaylistTrack) => {
-      const trackData = await Track.findBy('id', playlistTrack.trackId)
-
-      if (!trackData) {
-        throw ApiError.newError('ERROR_INVALID_DATA', 'PCGP-2')
-      }
-
-      return { ...trackData.serializeTrack(), ...playlistTrack.serializePlaylistTrack() }
-    })
+  const playlistsTracks = await PlaylistService.getRankedPlaylistTracksFormatted(
+    playlist.playlistTracks
   )
 
   let trackVersus: TracksVersus | null
 
-  trackVersus = await TracksVersus.query()
-    .where('playlist_id', playlist.id)
-    .andWhere('status', TracksVersusStatus.VotingProgress)
-    .preload('firstTrack')
-    .preload('secondTrack')
-    .preload('likeTracks')
-    .first()
+  trackVersus = await VersusService.getTracksVersusByPlaylistIdAndStatus(
+    playlist.id,
+    TracksVersusStatus.VotingProgress
+  )
 
   if (!trackVersus) {
-    trackVersus = await TracksVersus.query()
-      .where('playlist_id', playlist.id)
-      .andWhere('status', TracksVersusStatus.MissingTracks)
-      .preload('firstTrack')
-      .preload('secondTrack')
-      .preload('likeTracks')
-      .first()
+    trackVersus = await VersusService.getTracksVersusByPlaylistIdAndStatus(
+      playlist.id,
+      TracksVersusStatus.MissingTracks
+    )
   }
 
   const currentTracksVersus = await VersusService.tracksVersusBroadcasted(

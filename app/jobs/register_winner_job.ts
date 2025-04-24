@@ -79,8 +79,6 @@ export default class RegisterWinnerJob extends Job {
       )
       // f. Mettre à jour le snapshot en BDD
       await PlaylistService.updateSnapshotId(playlist.id, snapshot, trx)
-
-      await VersusService.activationTracksVersus(playlist.id, trx)
     })
   }
 

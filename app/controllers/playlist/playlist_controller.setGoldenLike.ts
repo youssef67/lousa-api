@@ -17,6 +17,7 @@ import SpotifyService from '#services/spotify_service'
 import Playlist from '#models/playlist'
 import PlaylistTrack from '#models/playlist_track'
 import { TracksVersusStatus } from '#types/versus.status'
+import { MAX_TRACKS } from '#config/playlist_limits'
 
 const setGoldenLike = async ({ request, currentDevice }: HttpContext) => {
   const payload = await request.validateUsing(setGoldenLikeValidator)
@@ -29,21 +30,32 @@ const setGoldenLike = async ({ request, currentDevice }: HttpContext) => {
   })
   const currentUser = currentDevice.user
 
-  const maxTrackOnPlaylist = 20
+  const maxTrackOnPlaylist = MAX_TRACKS
 
-  const tracksVersusExisting = await TracksVersus.findBy('id', payload.tracksVersusId)
+  const tracksVersusExisting = await TracksVersus.query()
+    .where('id', payload.tracksVersusId)
+    .preload('firstTrack')
+    .preload('secondTrack')
+    .preload('likeTracks')
+    .first()
 
   if (!tracksVersusExisting) {
     throw ApiError.newError('ERROR_INVALID_DATA', 'PCSGL-1')
   }
 
-  const playlistExisting = await Playlist.findBy('id', tracksVersusExisting.playlistId)
+  const playlistExisting = await Playlist.query()
+    .where('id', tracksVersusExisting.playlistId)
+    .preload('playlistTracks', (playlistTrackQuery) => {
+      playlistTrackQuery.where('is_ranked', true).preload('user').orderBy('position', 'asc')
+    })
+    .first()
 
   if (!playlistExisting) {
     throw ApiError.newError('ERROR_INVALID_DATA', 'PCSGL-2')
   }
 
   let userWinner: User | null
+  let playlistTracksRanked: PlaylistTrack[] = []
   await db.transaction(async (trx) => {
     const res = await VersusService.setWinnerGoldenLike(
       tracksVersusExisting,
@@ -63,7 +75,7 @@ const setGoldenLike = async ({ request, currentDevice }: HttpContext) => {
 
     const trackExisting = await Track.query().where('id', res.winnerTrack.trackId).first()
 
-    await PlaylistService.addRankedTrackAndReorder(
+    playlistTracksRanked = await PlaylistService.addRankedTrackAndReorder(
       {
         playlistId: tracksVersusExisting.playlistId,
         trackId: res.winnerTrack.trackId,
@@ -90,19 +102,8 @@ const setGoldenLike = async ({ request, currentDevice }: HttpContext) => {
     await PlaylistService.updateSnapshotId(playlistExisting.id, snapshot, trx)
   })
 
-  const playlistTracksRanked = await PlaylistService.getPlaylistTracksRanked(playlistExisting.id)
-
-  const playlistsTracksUpdated = await Promise.all(
-    playlistTracksRanked.map(async (playlistTrack: PlaylistTrack) => {
-      const trackData = await Track.findBy('id', playlistTrack.trackId)
-
-      if (!trackData) {
-        throw ApiError.newError('ERROR_INVALID_DATA', 'PCGP-2')
-      }
-
-      return { ...trackData.serializeTrack(), ...playlistTrack.serializePlaylistTrack() }
-    })
-  )
+  const playlistsTracksUpdated =
+    await PlaylistService.getRankedPlaylistTracksFormatted(playlistTracksRanked)
 
   transmit.broadcast(`playlist/updated/${playlistExisting.id}`, {
     playlistTracksUpdated: sanitizePlaylistTracks(playlistsTracksUpdated),
@@ -111,22 +112,16 @@ const setGoldenLike = async ({ request, currentDevice }: HttpContext) => {
 
   let trackVersus: TracksVersus | null
 
-  trackVersus = await TracksVersus.query()
-    .where('playlist_id', tracksVersusExisting.playlistId)
-    .andWhere('status', TracksVersusStatus.VotingProgress)
-    .preload('firstTrack')
-    .preload('secondTrack')
-    .preload('likeTracks')
-    .first()
+  trackVersus = await VersusService.getTracksVersusByPlaylistIdAndStatus(
+    tracksVersusExisting.playlistId,
+    TracksVersusStatus.VotingProgress
+  )
 
   if (!trackVersus) {
-    trackVersus = await TracksVersus.query()
-      .where('playlist_id', tracksVersusExisting.playlistId)
-      .andWhere('status', TracksVersusStatus.MissingTracks)
-      .preload('firstTrack')
-      .preload('secondTrack')
-      .preload('likeTracks')
-      .first()
+    trackVersus = await VersusService.getTracksVersusByPlaylistIdAndStatus(
+      tracksVersusExisting.playlistId,
+      TracksVersusStatus.MissingTracks
+    )
   }
 
   const currentTracksVersus = await VersusService.tracksVersusBroadcasted(
