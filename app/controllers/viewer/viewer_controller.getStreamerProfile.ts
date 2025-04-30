@@ -10,7 +10,9 @@ const getStreamerProfile = async ({ response, request, currentDevice }: HttpCont
 
   const spaceStreamer = await SpaceStreamer.query()
     .where('id', spaceStreamerId)
-    .preload('playlists')
+    .preload('playlists', (playlistsQuery) => {
+      playlistsQuery.preload('playlistTracks')
+    })
     .first()
 
   if (!spaceStreamer) {
@@ -35,7 +37,8 @@ const getStreamerProfile = async ({ response, request, currentDevice }: HttpCont
 
   const playlists = spaceStreamer.playlists.map((playlist) => ({
     ...playlist.serializePlaylist(),
-    isFavorite: favoritesPlaylistsIds.includes(playlist.id), // Correction ici
+    isFavorite: favoritesPlaylistsIds.includes(playlist.id),
+    nbTracks: playlist.playlistTracks.length,
   }))
 
   return response.ok({

@@ -47,6 +47,7 @@ const getFavorites = async ({ response, currentDevice }: HttpContext) => {
         nbTracks: playlist.playlistTracks.length,
         isSelected: playlist.id === currentUser.playlistSelected,
         nbFollowers: Number.parseInt(nbFollowers[0].count),
+        onlyFollowers: playlist.onlyFollowers,
       }
     })
   )

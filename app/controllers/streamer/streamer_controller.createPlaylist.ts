@@ -14,6 +14,7 @@ const createPlaylist = async ({ response, request, currentDevice }: HttpContext)
   await currentDevice.load('user')
   const currentUser = currentDevice.user
 
+  console.log('payload', payload)
   const existingSpotifyUser = await SpotifyUser.findBy('userId', currentUser.id)
 
   if (!existingSpotifyUser) {
@@ -63,6 +64,8 @@ const createPlaylist = async ({ response, request, currentDevice }: HttpContext)
     newPlaylist.spotifyPlaylistId = responseSpotify.id
     newPlaylist.spotifySnapShotId = responseSpotify.snapshot_id
     newPlaylist.spaceStreamerId = spaceStreamer.twitchUser.spaceStreamerId
+    newPlaylist.onlyFollowers = payload.onlyFollowers
+    newPlaylist.maxRankedTracks = payload.maxRankedTracks
     newPlaylist.status = ModelStatus.Enabled
     newPlaylist.useTransaction(trx)
     await newPlaylist.save()
@@ -71,6 +74,8 @@ const createPlaylist = async ({ response, request, currentDevice }: HttpContext)
   const playlistCreated = {
     id: newPlaylist.id,
     playlistName: newPlaylist.playlistName,
+    onlyFollowers: newPlaylist.onlyFollowers,
+    maxRankedTracks: newPlaylist.maxRankedTracks,
     nbTracks: 0,
     isSelected: false,
     nbFollowers: 0,

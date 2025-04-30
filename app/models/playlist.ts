@@ -24,6 +24,12 @@ export default class Playlist extends BaseModel {
   declare status: ModelStatus
 
   @column()
+  declare onlyFollowers: boolean
+
+  @column()
+  declare maxRankedTracks: number
+
+  @column()
   declare spaceStreamerId: string
 
   @belongsTo(() => SpaceStreamer, {
@@ -47,6 +53,8 @@ export default class Playlist extends BaseModel {
     const result = {
       id: this.id,
       playlistName: this.playlistName,
+      onlyFollowers: this.onlyFollowers,
+      maxRankedTracks: this.maxRankedTracks,
     } as PlaylistSession
     return result
   }
